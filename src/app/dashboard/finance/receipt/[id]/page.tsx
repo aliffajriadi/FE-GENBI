@@ -7,10 +7,12 @@ import { Button, Card, ErrorText, Skeleton } from "@/components/ui";
 import { api } from "@/lib/api";
 import { fmtDate, rupiah } from "@/lib/format";
 import type { Payment } from "@/lib/types";
+import { useMe } from "@/lib/use-me";
 
 // Kwitansi digital; "Cetak" → simpan sebagai PDF dari dialog print browser.
 export default function ReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { data: me } = useMe();
   const q = useQuery({ queryKey: ["payment", id], queryFn: () => api<Payment>(`/payments/${id}`) });
   if (q.isLoading) return <Skeleton className="mx-auto h-96 max-w-xl" />;
   if (!q.data) return <ErrorText error={q.error} />;
@@ -26,7 +28,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2.5">
             <img src="/logo.png" alt="" width={40} height={40} className="size-10" />
-            <div><p className="font-semibold">GenBI</p><p className="text-xs text-slate-500">Kwitansi uang kas</p></div>
+            <div><p className="font-semibold">GenBI</p><p className="text-xs text-slate-500">{p.treasuryDivisionId ? `Kwitansi kas divisi${me?.division?.id === p.treasuryDivisionId ? ` ${me.division.name}` : ""}` : "Kwitansi uang kas"}</p></div>
           </div>
           <p className="text-right text-xs text-slate-500">No. {p.id.slice(-8).toUpperCase()}<br />{fmtDate(p.updatedAt)}</p>
         </div>

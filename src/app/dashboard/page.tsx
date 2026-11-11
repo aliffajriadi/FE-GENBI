@@ -69,7 +69,7 @@ export default function DashboardPage() {
       )}
 
       {(!!d?.bills.count || !!d?.pendingPayments) && (
-        <div className="mb-6 grid gap-3 md:grid-cols-2">
+        <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2">
           {!!d?.bills.count && (
             <Card className="flex items-center gap-4 border-amber-200 bg-amber-50/50 px-5 py-4">
               <span className="grid size-9 place-items-center rounded-full bg-amber-100 text-amber-700"><Wallet size={18} aria-hidden /></span>
@@ -131,7 +131,7 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Card className="self-start">
           <CardHeader title="Kegiatan terdekat" desc="Rapat & kegiatan yang perlu Anda hadiri" action={<Link href="/dashboard/events" className="text-[13px] font-medium text-primary hover:underline">Lihat semua</Link>} />
           {dash.isLoading ? (

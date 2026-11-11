@@ -105,7 +105,7 @@ function Periods() {
       <Table
         loading={isLoading}
         toolbar={<><p className="mr-auto text-[15px] font-semibold">Periode kepengurusan</p><Button size="sm" onClick={() => setAdding(true)}><Plus size={14} aria-hidden /> Periode baru</Button></>}
-        head={["Periode", "Mulai", "Selesai", "Status", ""]}
+        hideOnMobile={[1, 2]} head={["Periode", "Mulai", "Selesai", "Status", ""]}
         empty={data.length === 0 && <EmptyState icon={CalendarRange} title="Belum ada periode" />}
       >
         {data.map((p) => (
@@ -243,10 +243,10 @@ function SiteSettings() {
   const img = publicFile(d.heroImage);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
       <Card className="overflow-hidden">
         <CardHeader title="Pratinjau hero beranda" desc="Foto memudar ke putih di bagian bawah." action={<a href="/" target="_blank" className="inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:underline">Buka beranda <ExternalLink size={13} aria-hidden /></a>} />
-        <div className="relative isolate aspect-[16/10] overflow-hidden bg-slate-800">
+        <div className="theme-light relative isolate aspect-[16/10] overflow-hidden bg-slate-800">
           {img && <img src={img} alt="" className="absolute inset-0 -z-10 h-full w-full object-cover" />}
           <div className="absolute inset-0 -z-10 bg-gradient-to-b from-slate-950/85 via-slate-950/60 via-55% to-slate-950/10" />
           <div className="absolute inset-x-0 bottom-0 -z-10 h-2/5 bg-gradient-to-b from-transparent to-white" />

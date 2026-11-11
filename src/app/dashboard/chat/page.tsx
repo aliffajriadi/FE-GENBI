@@ -135,7 +135,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-full bg-white">
       {/* Daftar channel */}
-      <aside className={cx("w-full shrink-0 flex-col border-r border-slate-200/80 bg-[#fbfbfc] md:flex md:w-72", mobileOpen ? "hidden" : "flex")}>
+      <aside className={cx("w-full shrink-0 flex-col border-r border-slate-200/80 bg-[var(--sidebar)] md:flex md:w-72", mobileOpen ? "hidden" : "flex")}>
         <div className="flex h-16 items-center gap-2 border-b border-slate-200/80 px-5">
           <MessagesSquare size={18} className="text-primary" aria-hidden />
           <h1 className="font-serif text-[22px] font-medium">Diskusi</h1>
@@ -440,7 +440,7 @@ function Conversation({ channel, meId, thread, typing, onBack, onSettings, onMem
           )}
         </div>
         {(unseen > 0 || !atBottom) && thread && !thread.loading && (
-          <button onClick={toBottom} className="absolute bottom-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-1.5 text-[12.5px] font-medium text-white shadow-lg hover:bg-slate-700">
+          <button onClick={toBottom} className="theme-light absolute bottom-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-1.5 text-[12.5px] font-medium text-white shadow-lg hover:bg-slate-700">
             <ArrowDown size={14} aria-hidden /> {unseen > 0 ? `${unseen} pesan baru` : "Ke pesan terbaru"}
           </button>
         )}

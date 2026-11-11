@@ -30,7 +30,7 @@ export function QrReader({ onResult, paused }: { onResult: (text: string) => voi
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-lg bg-slate-900">
+    <div className="theme-light overflow-hidden rounded-lg bg-slate-900">
       <video ref={video} className="aspect-square w-full object-cover" muted playsInline />
       {error && <p className="bg-red-50 p-3 text-[13px] text-red-700">{error}</p>}
     </div>

@@ -241,7 +241,7 @@ function EditorMenus({ editor, onError }: { editor: Editor; onError: (m: string)
     <>
       {/* Menu saat teks dipilih: gelap & ringkas seperti Medium */}
       <BubbleMenu editor={editor} options={{ placement: "top", offset: 8 }} shouldShow={({ editor: ed, from, to }) => from !== to && !ed.isActive("image")}
-        className="flex items-center gap-0.5 rounded-lg bg-slate-900 p-1 shadow-lg">
+        className="theme-light flex items-center gap-0.5 rounded-lg bg-slate-900 p-1 shadow-lg">
         {linking ? (
           <form className="flex items-center gap-1" onSubmit={(e) => { e.preventDefault(); if (href) editor.chain().focus().extendMarkRange("link").setLink({ href }).run(); else editor.chain().focus().unsetLink().run(); setLinking(false); }}>
             <input autoFocus value={href} onChange={(e) => setHref(e.target.value)} placeholder="Tempel tautan, lalu Enter" aria-label="Alamat tautan"
@@ -383,7 +383,7 @@ function HistoryDialog({ open, id, onClose, onRestore }: { open: boolean; id: st
     <Dialog open={open} onClose={onClose} title="Riwayat versi" desc="Versi isi tersimpan otomatis maksimal tiap 5 menit." size="lg"
       footer={onRestore && cur && <Button onClick={() => onRestore(cur.body)}>Pulihkan versi ini</Button>}>
       {q.data?.length === 0 ? <p className="py-8 text-center text-[13px] text-slate-500">Belum ada versi tersimpan.</p> : (
-        <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[180px_1fr]">
           <ul className="grid content-start gap-1">
             {q.data?.map((r) => (
               <li key={r.id}><button onClick={() => setSel(r.id)} className={cx("w-full rounded-lg px-3 py-2 text-left text-[13px]", cur?.id === r.id ? "bg-slate-100 font-medium" : "hover:bg-slate-50")}>{fmtDate(r.createdAt)}<span className="block text-xs font-normal text-slate-500">{r.editor}</span></button></li>

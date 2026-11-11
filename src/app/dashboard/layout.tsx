@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronsUpDown, CornerDownLeft, LogOut, Menu as MenuIcon, ScanLine, Search, UserRound, X } from "lucide-react";
+import { ChevronsUpDown, CornerDownLeft, LogOut, Menu as MenuIcon, Monitor, Moon, ScanLine, Search, Sun, UserRound, X } from "lucide-react";
+import { useTheme } from "@/lib/theme";
 import { Dialog } from "@/components/dialog";
 import { Menu, MenuItem } from "@/components/menu";
 import { NotificationBell } from "@/components/notification-bell";
@@ -121,6 +122,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <div className="pt-1">
             <MenuItem icon={UserRound} onClick={() => router.push("/dashboard/profile")}>Profil saya</MenuItem>
+            <ThemePicker />
             <MenuItem icon={LogOut} danger onClick={logout}>Keluar</MenuItem>
           </div>
         </Menu>
@@ -130,7 +132,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[260px_1fr]">
-      <aside className="hidden border-r border-slate-200/80 bg-[#fbfbfc] print:hidden lg:sticky lg:top-0 lg:block lg:h-dvh">{sidebar}</aside>
+      <aside className="hidden border-r border-slate-200/80 bg-[var(--sidebar)] print:hidden lg:sticky lg:top-0 lg:block lg:h-dvh">{sidebar}</aside>
 
       {/* Drawer mobile */}
       {/* Selalu ter-mount supaya bisa animasi buka & tutup; inert = tidak bisa difokus saat tertutup. */}
@@ -138,7 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className={cx("absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-300", drawer ? "opacity-100" : "opacity-0")} onClick={() => setDrawer(false)} />
         <aside
           className={cx(
-            "absolute inset-y-0 left-0 w-[280px] max-w-[85vw] bg-[#fbfbfc] shadow-lg transition-transform duration-300 ease-[var(--ease)]",
+            "absolute inset-y-0 left-0 w-[280px] max-w-[85vw] bg-[var(--sidebar)] shadow-lg transition-transform duration-300 ease-[var(--ease)]",
             drawer ? "translate-x-0" : "-translate-x-full",
           )}
         >
@@ -231,5 +233,33 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
         </ul>
       </div>
     </Dialog>
+  );
+}
+
+// Pilihan tema di menu akun: Terang / Gelap / Ikuti perangkat.
+function ThemePicker() {
+  const [theme, setTheme] = useTheme();
+  const opts = [
+    { v: "light", label: "Terang", icon: Sun },
+    { v: "dark", label: "Gelap", icon: Moon },
+    { v: "system", label: "Sistem", icon: Monitor },
+  ] as const;
+  return (
+    <div className="px-2.5 py-2" onClick={(e) => e.stopPropagation()}>
+      <p className="mb-1.5 text-xs text-slate-500">Tampilan</p>
+      <div role="radiogroup" aria-label="Tema tampilan" className="grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-1">
+        {opts.map((o) => (
+          <button
+            key={o.v}
+            role="radio"
+            aria-checked={theme === o.v}
+            onClick={() => setTheme(o.v)}
+            className={cx("flex flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] font-medium transition", theme === o.v ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900")}
+          >
+            <o.icon size={14} aria-hidden />{o.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

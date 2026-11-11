@@ -34,7 +34,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const profileHref = a.author.profilePublic && a.author.id ? `/anggota/${a.author.id}` : null;
 
   return (
-    <div className="bg-white">
+    <div className="theme-light bg-white text-slate-900">
       <ReadingProgress />
       <SiteHeader active={KIND[a.kind].href} />
       <main className="py-12 sm:py-16">
@@ -60,7 +60,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <section className="border-t border-slate-200 bg-slate-50/70">
           <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
             <h2 className="font-serif text-[28px] font-medium tracking-[-0.01em]">Baca juga di {KIND[a.kind].label}</h2>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{related.map((r) => <ArticleCard key={r.id} a={r} />)}</div>
+            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">{related.map((r) => <ArticleCard key={r.id} a={r} />)}</div>
           </div>
         </section>
       )}

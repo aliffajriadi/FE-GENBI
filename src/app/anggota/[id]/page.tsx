@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, AtSign, Globe } from "lucide-react";
+import { ArrowLeft, AtSign, Briefcase, Globe } from "lucide-react";
 import { getPublic, KIND, publicImg } from "@/components/site/public-api";
 import { fmtDay, Initials, SiteFooter, SiteHeader } from "@/components/site/site-shell";
 import { socialLinks } from "@/lib/social";
 
 type Profile = {
-  id: string; name: string; avatarUrl: string | null; coverUrl: string | null; bio: string | null; instagram: string | null; tiktok: string | null; website: string | null;
+  id: string; name: string; avatarUrl: string | null; coverUrl: string | null; bio: string | null; instagram: string | null; tiktok: string | null; linkedin: string | null; website: string | null;
   memberships: { position: string | null; role: { key: string; name: string }; division: { name: string } | null; period: { name: string; isActive: boolean } }[];
   articles: { id: string; title: string; slug: string; kind: "NEWS" | "PERSONAL"; excerpt: string | null; coverUrl: string | null; coverAlt: string | null; publishedAt: string }[];
 };
@@ -29,7 +29,7 @@ export default async function PublicProfile({ params }: { params: Promise<{ id: 
   const links = socialLinks(p);
 
   return (
-    <div className="bg-white">
+    <div className="theme-light bg-white text-slate-900">
       <SiteHeader active="/anggota" />
       <main className="pb-20">
         <div className="mx-auto max-w-5xl sm:px-6 sm:pt-6">
@@ -45,7 +45,7 @@ export default async function PublicProfile({ params }: { params: Promise<{ id: 
               {links.map((l) => (
                 <li key={l.kind}>
                   <a href={l.href} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex h-9 items-center gap-2 rounded-full border border-slate-200 px-4 text-[14px] text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900">
-                    {l.kind === "Website" ? <Globe size={15} aria-hidden /> : <AtSign size={15} aria-hidden />} <span className="text-slate-400">{l.kind}</span> {l.label}
+                    {l.kind === "Website" ? <Globe size={15} aria-hidden /> : l.kind === "LinkedIn" ? <Briefcase size={15} aria-hidden /> : <AtSign size={15} aria-hidden />} <span className="text-slate-400">{l.kind}</span> {l.label}
                   </a>
                 </li>
               ))}

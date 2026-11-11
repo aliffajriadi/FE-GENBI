@@ -24,7 +24,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
     .map(([name, list]) => [name, list.sort((a, b) => Number(b.role === "KADIV") - Number(a.role === "KADIV"))] as const);
 
   return (
-    <div className="bg-white">
+    <div className="theme-light bg-white text-slate-900">
       <SiteHeader active="/anggota" />
       <main className="mx-auto max-w-6xl px-5 pt-14 pb-20 sm:px-6 sm:pt-20">
         <h1 className="font-serif text-[44px] leading-none font-medium tracking-[-0.02em] sm:text-[56px]">Anggota</h1>

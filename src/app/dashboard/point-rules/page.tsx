@@ -31,7 +31,7 @@ export default function PointRulesPage() {
         desc="Perubahan nilai hanya berlaku untuk kejadian berikutnya. Poin yang sudah tercatat tidak ikut berubah."
         actions={editable && <Button onClick={() => setEdit("new")}><Plus size={16} aria-hidden /> Aturan baru</Button>}
       />
-      <Table loading={isLoading} head={["Aturan", "Poin", "Pemicu", "Status", ""]}>
+      <Table loading={isLoading} hideOnMobile={[2, 3]} head={["Aturan", "Poin", "Pemicu", "Status", ""]}>
         {data.map((r) => (
           <tr key={r.id} className="group hover:bg-slate-50/60">
             <Td>
@@ -53,9 +53,9 @@ export default function PointRulesPage() {
             <Td><Badge status={r.isActive ? "ACTIVE" : "INACTIVE"} /></Td>
             <Td className="text-right whitespace-nowrap">
               {editable && (
-                <span className="inline-flex gap-1">
+                <span className="inline-flex flex-col-reverse items-end gap-1 sm:flex-row sm:items-center">
                   <Button variant="ghost" size="sm" onClick={() => toggle.mutate(r)}>{r.isActive ? "Nonaktifkan" : "Aktifkan"}</Button>
-                  <Button variant="outline" size="sm" onClick={() => setEdit(r)}><Pencil size={13} aria-hidden /> Ubah</Button>
+                  <Button variant="outline" size="sm" onClick={() => setEdit(r)} aria-label={`Ubah ${r.label}`}><Pencil size={13} aria-hidden /><span className="hidden sm:inline">Ubah</span></Button>
                 </span>
               )}
             </Td>

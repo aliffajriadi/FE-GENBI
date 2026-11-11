@@ -53,7 +53,7 @@ export function MemberForm({ member, isAdmin, onDone, onCancel }: { member?: Mem
       </section>
       <section className="grid gap-4 border-t border-slate-100 pt-6">
         <p className="text-[13px] font-semibold">Jabatan periode ini</p>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Role">
             <Select name="roleKey" defaultValue={member?.role ?? "ANGGOTA"}>
               {ROLE_OPTIONS.filter(([k]) => isAdmin || k !== "SYS_ADMIN").map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -70,7 +70,7 @@ export function MemberForm({ member, isAdmin, onDone, onCancel }: { member?: Mem
       </section>
       <section className="grid gap-4 border-t border-slate-100 pt-6">
         <p className="text-[13px] font-semibold">Data diri</p>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="NIM"><Input name="nim" defaultValue={member?.nim ?? ""} /></Field>
           <Field label="No. HP"><Input name="phone" type="tel" defaultValue={member?.phone ?? ""} /></Field>
           <Field label="Kampus"><Input name="campus" defaultValue={member?.campus ?? ""} /></Field>

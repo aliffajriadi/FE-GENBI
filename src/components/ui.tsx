@@ -1,5 +1,5 @@
 // Komponen dasar gaya shadcn/ui. Biru hanya untuk aksi utama, link & status aktif; hijau/kuning/merah khusus status.
-import { forwardRef } from "react";
+import { forwardRef, useId } from "react";
 import { Loader2, type LucideIcon } from "lucide-react";
 
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
@@ -101,14 +101,14 @@ export function Card({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) 
 export function CardHeader({ title, desc, action, icon: Icon }: { title: string; desc?: string; action?: React.ReactNode; icon?: LucideIcon }) {
   return (
     <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
-      <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start gap-3">
         {Icon && <IconChip icon={Icon} />}
-        <div>
+        <div className="min-w-0">
           <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
           {desc && <p className="mt-0.5 text-[13px] text-slate-500">{desc}</p>}
         </div>
       </div>
-      {action}
+      {action && <div className="shrink-0 whitespace-nowrap">{action}</div>}
     </div>
   );
 }
@@ -118,7 +118,7 @@ export function PageHeader({ title, desc, actions, eyebrow }: { title: React.Rea
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {eyebrow && <div className="mb-2 text-[13px] text-slate-500">{eyebrow}</div>}
-        <h1 className="font-serif text-[30px] leading-tight font-medium tracking-[-0.01em] text-slate-900">{title}</h1>
+        <h1 className="font-serif text-[26px] leading-tight sm:text-[30px] font-medium tracking-[-0.01em] text-slate-900">{title}</h1>
         {desc && <p className="mt-1 max-w-2xl text-[14px] text-slate-500">{desc}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -141,15 +141,15 @@ export function IconChip({ icon: Icon, tone = "blue" }: { icon: LucideIcon; tone
   );
 }
 
-export function StatCard({ label, value, hint, icon, tone, loading }: { label: string; value: React.ReactNode; hint?: React.ReactNode; icon: LucideIcon; tone?: "blue" | "green" | "amber" | "red" | "slate"; loading?: boolean }) {
+export function StatCard({ label, value, hint, icon, tone, loading, className }: { label: string; value: React.ReactNode; hint?: React.ReactNode; icon: LucideIcon; tone?: "blue" | "green" | "amber" | "red" | "slate"; loading?: boolean; className?: string }) {
   return (
-    <Card className="p-5">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-[13px] font-medium text-slate-500">{label}</p>
+    <Card className={cx("min-w-0 p-4 sm:p-5", className)}>
+      <div className="flex items-start justify-between gap-2 sm:gap-3">
+        <p className="min-w-0 text-[12.5px] leading-snug font-medium text-slate-500 sm:text-[13px]">{label}</p>
         <IconChip icon={icon} tone={tone} />
       </div>
-      {loading ? <Skeleton className="mt-1 h-8 w-20" /> : <p className="-mt-1 text-[28px] font-semibold tracking-tight text-slate-900 tabular-nums">{value}</p>}
-      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+      {loading ? <Skeleton className="mt-1 h-8 w-20" /> : <p className="-mt-1 truncate text-2xl font-semibold tracking-tight text-slate-900 tabular-nums sm:text-[28px]">{value}</p>}
+      {hint && <p className="mt-1 line-clamp-2 text-xs text-slate-500">{hint}</p>}
     </Card>
   );
 }
@@ -173,9 +173,12 @@ export function EmptyState({ icon: Icon, title, desc, action }: { icon: LucideIc
 
 // ───── Table ─────
 
-export function Table({ head, children, empty, loading, toolbar, footer }: { head: React.ReactNode[]; children: React.ReactNode; empty?: React.ReactNode; loading?: boolean; toolbar?: React.ReactNode; footer?: React.ReactNode }) {
+export function Table({ head, children, empty, loading, toolbar, footer, hideOnMobile }: { head: React.ReactNode[]; children: React.ReactNode; empty?: React.ReactNode; loading?: boolean; toolbar?: React.ReactNode; footer?: React.ReactNode; hideOnMobile?: number[] }) {
+  const id = "t" + useId().replace(/[^a-zA-Z0-9]/g, "");
   return (
-    <Card className="overflow-hidden">
+    <Card className={cx("overflow-hidden", id)}>
+      {/* Kolom pelengkap disembunyikan di bawah 640px supaya tabel tidak perlu digeser. */}
+      {!!hideOnMobile?.length && <style>{`@media (max-width:639px){.${id} tr>:is(${hideOnMobile.map((i) => `:nth-child(${i + 1})`).join(",")}){display:none}}`}</style>}
       {toolbar && <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-3">{toolbar}</div>}
       <div className="overflow-x-auto">
         <table className="w-full text-left">
@@ -300,7 +303,7 @@ export function DateTile({ date, active }: { date: string | Date; active?: boole
 
 export function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: { value: T; label: string; count?: number }[] }) {
   return (
-    <div role="tablist" className="inline-flex rounded-lg bg-slate-100 p-1">
+    <div role="tablist" className="inline-flex max-w-full overflow-x-auto rounded-lg bg-slate-100 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {items.map((it) => (
         <button
           key={it.value}
@@ -308,7 +311,7 @@ export function Tabs<T extends string>({ value, onChange, items }: { value: T; o
           aria-selected={value === it.value}
           onClick={() => onChange(it.value)}
           className={cx(
-            "inline-flex h-7 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium transition",
+            "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium whitespace-nowrap transition",
             value === it.value ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900",
           )}
         >

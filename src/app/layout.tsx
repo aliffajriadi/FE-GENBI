@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Newsreader } from "next/font/google";
 import { TopLoader } from "@/components/top-loader";
+import { THEME_SCRIPT } from "@/lib/theme";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -12,7 +13,8 @@ export const metadata: Metadata = { title: "MyGenBI", description: "Kabar, kegia
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" className={`${sans.variable} ${serif.variable}`}>
+    <html lang="id" className={`${sans.variable} ${serif.variable}`} suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /></head>
       <body className="font-sans">
         <TopLoader />
         <Providers>{children}</Providers>

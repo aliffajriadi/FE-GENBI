@@ -47,30 +47,30 @@ export default function PointsPage() {
         actions={can("points.adjust") && <Button onClick={() => setAdjust(true)}><Plus size={16} aria-hidden /> Beri poin</Button>}
       />
 
-      <div className="mb-6 grid gap-4 md:grid-cols-[280px_1fr]">
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-[280px_1fr]">
         <Card className="bg-primary p-5 text-white">
           <p className="text-[13px] text-blue-200">Poin saya</p>
           {mine.isLoading ? <Skeleton className="mt-2 h-10 w-24 bg-white/10" /> : <p className="mt-1 text-4xl font-semibold tracking-tight tabular-nums">{mine.data?.total ?? 0}</p>}
-          <p className="mt-6 text-[13px] text-blue-200">{myRank ? `Peringkat #${myRank.rank} dari ${board.data?.length}` : "Belum masuk leaderboard"}</p>
+          <p className="mt-3 text-[13px] text-blue-200 sm:mt-6">{myRank ? `Peringkat #${myRank.rank} dari ${board.data?.length}` : "Belum masuk leaderboard"}</p>
         </Card>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {board.isLoading
             ? Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)
             : top.map((r, i) => (
-                <Card key={r.userId} className={cx("p-5", i === 0 && "ring-1 ring-blue-200")}>
+                <Card key={r.userId} className={cx("min-w-0 p-3 sm:p-5", i === 0 && "ring-1 ring-blue-200")}>
                   <div className="flex items-center justify-between">
-                    <Avatar name={r.name} src={r.avatarUrl} size={40} />
+                    <Avatar name={r.name} src={r.avatarUrl} size={36} />
                     {i === 0 ? <Trophy size={20} className="text-primary" aria-label="Peringkat 1" /> : <Medal size={20} className="text-slate-400" aria-label={`Peringkat ${i + 1}`} />}
                   </div>
-                  <Link href={`/dashboard/people/${r.userId}`} className="mt-4 block truncate font-medium hover:text-primary">{r.name}</Link>
+                  <Link href={`/dashboard/people/${r.userId}`} className="mt-3 block truncate text-[13px] font-medium hover:text-primary sm:mt-4 sm:text-sm">{r.name}</Link>
                   <p className="truncate text-xs text-slate-500">{r.division ?? "–"}</p>
-                  <p className="mt-2 text-xl font-semibold tabular-nums">{r.points} <span className="text-xs font-normal text-slate-500">poin</span></p>
+                  <p className="mt-2 text-lg font-semibold tabular-nums sm:text-xl">{r.points} <span className="text-xs font-normal text-slate-500">poin</span></p>
                 </Card>
               ))}
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Table
           loading={board.isLoading}
           toolbar={
@@ -87,7 +87,7 @@ export default function PointsPage() {
               </Select>
             </>
           }
-          head={["#", "Anggota", "Divisi", "Poin"]}
+          hideOnMobile={[2]} head={["#", "Anggota", "Divisi", "Poin"]}
           empty={board.data?.length === 0 && <EmptyState icon={Award} title="Belum ada poin" desc="Poin muncul setelah absensi ditutup atau pengurus memberi poin." />}
         >
           {board.data?.map((r) => (

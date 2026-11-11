@@ -32,7 +32,7 @@ export async function ArticleIndex({ kind, tag, q, sort, page }: Params) {
   const activeTag = tags.find((t) => t.slug === tag);
 
   return (
-    <div className="bg-white">
+    <div className="theme-light bg-white text-slate-900">
       <SiteHeader active={base} />
 
       {/* ───── Kepala halaman: judul, pencarian, urutan ───── */}
@@ -98,7 +98,7 @@ export async function ArticleIndex({ kind, tag, q, sort, page }: Params) {
         ) : (
           <>
             {showHighlight && articles.length >= 3 && <Highlights items={articles.slice(0, 3)} />}
-            <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_280px]">
               <section aria-label="Daftar artikel">
                 {showHighlight && articles.length >= 3 && <h2 className="mb-2 text-[13px] font-semibold tracking-[0.08em] text-slate-500 uppercase">Semua artikel</h2>}
                 <div className="divide-y divide-slate-100">

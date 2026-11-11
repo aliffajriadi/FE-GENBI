@@ -1,4 +1,5 @@
 "use client";
+import { fitImage } from "./image";
 
 // Kosong = lewat proxy Next (/api/v1 → BACKEND_URL): satu origin, jadi jalan di HP/LAN/tunnel/HTTPS tanpa atur URL lagi.
 const BASE = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
@@ -66,8 +67,11 @@ export const publicFile = (url: string | null | undefined) => (url ? (url.starts
 
 export type Uploaded = { id: string; url: string; mime: string; size: number };
 
-export async function uploadFile(file: File, opts: { public?: boolean } = {}): Promise<Uploaded> {
-  if (file.size > 5 * 1024 * 1024) throw new ApiError("UPLOAD_INVALID", "Ukuran file maksimal 5 MB", 400);
+export const MAX_UPLOAD = 2 * 1024 * 1024; // sama dengan batas server
+
+export async function uploadFile(input: File, opts: { public?: boolean } = {}): Promise<Uploaded> {
+  const file = await fitImage(input, MAX_UPLOAD);
+  if (file.size > MAX_UPLOAD) throw new ApiError("UPLOAD_INVALID", `Ukuran file maksimal 2 MB (file ini ${(file.size / 1048576).toFixed(1)} MB). Kompres PDF-nya dulu, mis. di ilovepdf.com.`, 400);
   const fd = new FormData();
   fd.append("file", file);
   if (opts.public) fd.append("public", "true");

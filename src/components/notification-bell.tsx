@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { Bell, CalendarCheck, CheckCheck, FolderOpen, Newspaper, UserCog, Wallet, type LucideIcon } from "lucide-react";
+import { Bell, CalendarCheck, CheckCheck, FolderOpen, KanbanSquare, Newspaper, UserCog, Wallet, type LucideIcon } from "lucide-react";
 import { Menu } from "./menu";
 import { cx } from "./ui";
 import { api } from "@/lib/api";
@@ -14,6 +14,7 @@ export function notifIcon(type: string): { icon: LucideIcon; tone: string } {
   if (/^(EVENT|LEAVE)/.test(type)) return { icon: CalendarCheck, tone: "bg-blue-50 text-blue-700" };
   if (/^(BILL|PAYMENT)/.test(type)) return { icon: Wallet, tone: "bg-emerald-50 text-emerald-700" };
   if (type.startsWith("ARTICLE")) return { icon: Newspaper, tone: "bg-violet-50 text-violet-700" };
+  if (type.startsWith("PLANNING")) return { icon: KanbanSquare, tone: "bg-indigo-50 text-indigo-700" };
   if (type.startsWith("DIVISION")) return { icon: UserCog, tone: "bg-amber-50 text-amber-700" };
   if (/^(DISPOSITION|ACTION_ITEM|IN)$/.test(type)) return { icon: FolderOpen, tone: "bg-sky-50 text-sky-700" };
   return { icon: Bell, tone: "bg-slate-100 text-slate-600" };

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import QRCode from "qrcode";
-import { AtSign, Camera, Globe, ImagePlus, KeyRound, Loader2, QrCode, Trash2, UserRound } from "lucide-react";
+import { AtSign, Briefcase, Camera, Globe, ImagePlus, KeyRound, Loader2, QrCode, Trash2, UserRound } from "lucide-react";
 import Link from "next/link";
 import { resizeJpeg } from "@/lib/image";
 import { useToast } from "@/components/toast";
@@ -35,7 +35,7 @@ export default function ProfilePage() {
   return (
     <>
       <PageHeader title="Profil saya" desc="Email, NIM, dan jabatan diubah oleh Sekretaris." />
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
         <div className="grid min-w-0 grid-cols-1 content-start gap-6">
           <Card className="overflow-hidden">
             <CoverEditor src={me.coverUrl} />
@@ -57,7 +57,7 @@ export default function ProfilePage() {
               onSubmit={(e) => {
                 e.preventDefault();
                 const f = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
-                profile.mutate({ bio: v(f.bio), instagram: f.instagram, tiktok: f.tiktok, website: v(f.website), profilePublic: f.profilePublic === "on" });
+                profile.mutate({ bio: v(f.bio), instagram: f.instagram, tiktok: f.tiktok, linkedin: f.linkedin, website: v(f.website), profilePublic: f.profilePublic === "on" });
               }}
             >
               <Field label="Bio" hint="Maksimal 300 karakter." className="sm:col-span-2">
@@ -65,7 +65,8 @@ export default function ProfilePage() {
               </Field>
               <Field label="Instagram"><Input icon={AtSign} name="instagram" defaultValue={me.instagram ?? ""} placeholder="username" maxLength={60} /></Field>
               <Field label="TikTok"><Input icon={AtSign} name="tiktok" defaultValue={me.tiktok ?? ""} placeholder="username" maxLength={60} /></Field>
-              <Field label="Website" className="sm:col-span-2"><Input icon={Globe} name="website" type="url" defaultValue={me.website ?? ""} placeholder="https://blogkamu.com" maxLength={200} /></Field>
+              <Field label="LinkedIn" hint="Tempel link profil atau username saja"><Input icon={Briefcase} name="linkedin" defaultValue={me.linkedin ?? ""} placeholder="linkedin.com/in/username" maxLength={200} /></Field>
+              <Field label="Website"><Input icon={Globe} name="website" type="url" defaultValue={me.website ?? ""} placeholder="https://blogkamu.com" maxLength={200} /></Field>
               <label className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 sm:col-span-2">
                 <input type="checkbox" name="profilePublic" defaultChecked={me.profilePublic} className="mt-0.5 size-4 accent-[var(--primary)]" />
                 <span>

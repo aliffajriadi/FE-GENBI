@@ -32,7 +32,7 @@ export default async function Home() {
   const next = events[0];
 
   return (
-    <div className="bg-white">
+    <div className="theme-light bg-white text-slate-900">
       <SiteHeader overlay />
 
       {/* ───── Hero: foto pilihan pengurus, gelap di atas untuk teks, memudar ke putih di bawah ───── */}
@@ -171,7 +171,7 @@ export default async function Home() {
         <section id="divisi" className="scroll-mt-20 border-t border-slate-200/70">
           <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24">
             <SectionHead title="Divisi" desc={stats.period ? `Kepengurusan ${stats.period}` : undefined} href="/anggota" cta="Kenali anggotanya" />
-            <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {divisions.map((d, i) => (
                 <li key={d.id} className="rounded-2xl bg-[#faf9f7] p-7 ring-1 ring-slate-200/70">
                   <p className="font-serif text-[15px] text-slate-400 tabular-nums">{String(i + 1).padStart(2, "0")}</p>

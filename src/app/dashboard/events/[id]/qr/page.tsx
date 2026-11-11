@@ -34,7 +34,7 @@ export default function QrScreen({ params }: { params: Promise<{ id: string }> }
   const r = 15;
   const circ = 2 * Math.PI * r;
   return (
-    <main className="flex min-h-dvh flex-col bg-white">
+    <main className="theme-light flex min-h-dvh flex-col bg-white text-slate-900">
       <header className="flex items-center justify-between px-6 py-4">
         <Link href={`/dashboard/events/${id}`} className="inline-flex items-center gap-1.5 text-[13px] text-slate-500 hover:text-slate-900"><ArrowLeft size={15} aria-hidden /> Kembali</Link>
         <button onClick={() => document.documentElement.requestFullscreen?.()} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] text-slate-500 hover:bg-slate-100 hover:text-slate-900">

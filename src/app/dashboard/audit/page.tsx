@@ -56,7 +56,7 @@ export default function AuditPage() {
             {["User", "Role", "Event", "Attendance", "PointLedger", "PointRule", "LeaveRequest", "Division", "Period"].map((e) => <option key={e}>{e}</option>)}
           </Select>
         }
-        head={["Aksi", "Oleh", "Entitas", "Waktu", ""]}
+        hideOnMobile={[1, 2, 3]} head={["Aksi", "Oleh", "Entitas", "Waktu", ""]}
         empty={rows.length === 0 && <EmptyState icon={History} title="Belum ada aktivitas" />}
         footer={pages > 1 && (
           <div className="flex items-center justify-end gap-2">
@@ -68,17 +68,21 @@ export default function AuditPage() {
       >
         {rows.map((l) => (
           <tr key={l.id} className="hover:bg-slate-50/60">
-            <Td className="font-medium">{ACTION_LABEL[l.action] ?? l.action}</Td>
+            <Td className="font-medium">
+              {ACTION_LABEL[l.action] ?? l.action}
+              {/* Di HP kolom Oleh & Waktu disembunyikan, jadi ringkasannya tampil di sini. */}
+              <span className="mt-0.5 block text-xs font-normal text-slate-500 sm:hidden">{l.actor?.name ?? "Sistem"} · {fmtRelative(l.createdAt)}</span>
+            </Td>
             <Td><span className="flex items-center gap-2"><Avatar name={l.actor?.name ?? "Sistem"} size={24} />{l.actor?.name ?? "Sistem"}</span></Td>
             <Td><span className="font-mono text-xs text-slate-500">{l.entity}</span></Td>
-            <Td className="text-slate-500" title={fmtDate(l.createdAt)}>{fmtRelative(l.createdAt)}</Td>
+            <Td className="whitespace-nowrap text-slate-500" title={fmtDate(l.createdAt)}>{fmtRelative(l.createdAt)}</Td>
             <Td className="text-right">{(l.before != null || l.after != null) && <Button variant="ghost" size="sm" onClick={() => setOpen(l)}>Detail</Button>}</Td>
           </tr>
         ))}
       </Table>
       <Dialog open={!!open} onClose={() => setOpen(null)} title={open ? ACTION_LABEL[open.action] ?? open.action : ""} desc={open ? `${open.actor?.name ?? "Sistem"} · ${fmtDate(open.createdAt)}${open.ip ? ` · IP ${open.ip}` : ""}` : ""} size="lg">
         {open && (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {(["before", "after"] as const).map((k) => (
               <div key={k}>
                 <p className="mb-1.5 text-xs font-medium text-slate-500">{k === "before" ? "Sebelum" : "Sesudah"}</p>

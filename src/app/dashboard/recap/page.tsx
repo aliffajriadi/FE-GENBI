@@ -33,10 +33,10 @@ export default function RecapPage() {
         title="Rekap absensi"
         desc={`Dari kegiatan yang absensinya sudah ditutup, periode ${me?.period?.name ?? "aktif"}.${me?.role === "KADIV" ? ` Divisi ${me.division?.name}.` : ""}`}
       />
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatCard label="Rata-rata kehadiran" value={avg == null ? "–" : `${avg}%`} icon={CalendarCheck} tone="green" loading={isLoading} />
         <StatCard label="Anggota" value={data.length} icon={Users} tone="slate" loading={isLoading} />
-        <StatCard label="Kehadiran di bawah 60%" value={low} icon={CircleAlert} tone={low ? "red" : "slate"} loading={isLoading} hint="Perlu perhatian pengurus" />
+        <StatCard className="col-span-2 sm:col-span-1" label="Kehadiran di bawah 60%" value={low} icon={CircleAlert} tone={low ? "red" : "slate"} loading={isLoading} hint="Perlu perhatian pengurus" />
       </div>
       <Table
         loading={isLoading}
@@ -54,7 +54,7 @@ export default function RecapPage() {
             </Button>
           </>
         }
-        head={["Anggota", "Divisi", "Hadir", "Telat", "Izin/Sakit", "Alpa", "Kehadiran"]}
+        hideOnMobile={[1, 3, 4]} head={["Anggota", "Divisi", "Hadir", "Telat", "Izin/Sakit", "Alpa", "Kehadiran"]}
         empty={rows.length === 0 && <EmptyState icon={ClipboardList} title="Belum ada data rekap" desc="Rekap terisi setelah absensi kegiatan ditutup." />}
       >
         {rows.map((r) => (

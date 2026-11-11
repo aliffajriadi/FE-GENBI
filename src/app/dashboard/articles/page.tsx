@@ -42,7 +42,7 @@ export default function ArticlesPage() {
       {tabs.length > 1 && <div className="mb-4"><Tabs value={scope} onChange={setScope} items={tabs} /></div>}
       <Table
         loading={list.isLoading}
-        head={["Judul", "Jenis", "Penulis", "Status", "Diubah", "Dibaca"]}
+        hideOnMobile={[1, 2, 4, 5]} head={["Judul", "Jenis", "Penulis", "Status", "Diubah", "Dibaca"]}
         empty={rows.length === 0 && (
           <EmptyState
             icon={Newspaper}

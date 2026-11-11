@@ -29,11 +29,11 @@ export function MemberDirectory() {
         </Select>
       </div>
       {list.isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}</div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}</div>
       ) : rows.length === 0 ? (
         <Card><EmptyState icon={Users} title="Tidak ada yang cocok" /></Card>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {rows.map((p) => (
             <li key={p.id}>
               <Link href={`/dashboard/people/${p.id}`} className="group flex h-full flex-col items-center rounded-xl border border-slate-200/80 bg-white p-6 text-center shadow-xs transition hover:border-slate-300 hover:shadow-sm">

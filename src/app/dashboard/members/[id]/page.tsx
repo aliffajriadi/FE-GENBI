@@ -84,13 +84,13 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
         </div>
       </Card>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatCard label="Poin periode ini" value={u.points.total} icon={Trophy} />
         <StatCard label="Kehadiran" value={att.length ? `${Math.round((present / att.length) * 100)}%` : "–"} icon={CalendarCheck} tone="green" hint={`${present} dari ${att.length} kegiatan`} />
-        <StatCard label="Alpa" value={att.filter((a) => a.status === "ALPA").length} icon={UserX} tone="red" />
+        <StatCard className="col-span-2 sm:col-span-1" label="Alpa" value={att.filter((a) => a.status === "ALPA").length} icon={UserX} tone="red" />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader title="Riwayat kehadiran" />
           <ul className="max-h-[480px] divide-y divide-slate-100 overflow-y-auto">

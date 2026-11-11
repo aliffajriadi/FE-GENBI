@@ -64,7 +64,7 @@ function MembersAdmin() {
             </Select>
           </>
         }
-        head={["Anggota", "Jabatan", "Divisi", "Status", "Perangkat"]}
+        hideOnMobile={[2, 4]} head={["Anggota", "Jabatan", "Divisi", "Status", "Perangkat"]}
         empty={rows.length === 0 && (
           <EmptyState
             icon={Users}

@@ -64,13 +64,13 @@ export default function NotificationsPage() {
       </div>
       <ErrorText error={q.error ?? read.error} />
 
-      <Card className="overflow-hidden">
+      <Card>
         {q.isLoading && <div className="space-y-3 p-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-14" />)}</div>}
         {!q.isLoading && !items.length && (
           <EmptyState icon={Bell} title={tab === "unread" ? "Semua sudah dibaca" : "Belum ada notifikasi"} desc={tab === "unread" ? "Tidak ada notifikasi baru." : "Notifikasi akan muncul di sini."} />
         )}
         {groups.map((g) => (
-          <section key={g.label}>
+          <section key={g.label} className="first:[&>h2]:rounded-t-xl">
             <h2 className="sticky top-14 z-10 border-b border-slate-100 bg-slate-50/95 px-4 py-2 text-[11px] font-semibold tracking-wider text-slate-500 uppercase backdrop-blur-sm lg:top-0">{g.label}</h2>
             <ul className="divide-y divide-slate-100">
               {g.items.map((n) => {

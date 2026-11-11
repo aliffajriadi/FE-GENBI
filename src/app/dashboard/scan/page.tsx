@@ -41,7 +41,7 @@ export default function ScanPage() {
   return (
     <>
       <PageHeader title="Scan absensi" desc="Arahkan kamera ke QR yang ditampilkan panitia. Bisa juga dari HP lewat MyGenBI." />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,440px)_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,440px)_1fr]">
         <Card className="overflow-hidden p-3">
           <div className="relative">
             <QrReader onResult={onScan} paused={busy || result?.ok} />
