@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, AlignLeft, ArrowLeft, ArrowRight, CalendarDays, Check, CheckSquare, ChevronLeft, ChevronRight, KanbanSquare, MoreHorizontal, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { AlertTriangle, AlignLeft, SlidersHorizontal, ArrowLeft, ArrowRight, CalendarDays, Check, CheckSquare, ChevronLeft, ChevronRight, KanbanSquare, MoreHorizontal, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Dialog } from "@/components/dialog";
 import { Menu, MenuItem } from "@/components/menu";
 import { useToast } from "@/components/toast";
@@ -53,6 +53,9 @@ export default function PlanningPage() {
   const [month, setMonth] = useState("all");
   const [pic, setPic] = useState("");
   const [q, setQ] = useState("");
+  const [showFilters, setShowFilters] = useState(false); // HP: filter disembunyikan supaya papan langsung terlihat
+  const boardRef = useRef<HTMLDivElement>(null);
+  const [colIdx, setColIdx] = useState(0); // kolom yang sedang terlihat di HP
   const [openId, setOpenId] = useState<string | null>(null); // kartu yang detailnya tampil di panel samping
   const [renaming, setRenaming] = useState<Column | "new" | null>(null);
 
@@ -121,7 +124,7 @@ export default function PlanningPage() {
     <>
       <PageHeader
         title="Planning divisi"
-        desc={b ? `Papan kerja ${b.division.name}. Seret kartu untuk mengubah statusnya.` : "Rencanakan program kerja divisi bersama-sama."}
+        desc={<span className="hidden sm:inline">{b ? `Papan kerja ${b.division.name}. Seret kartu untuk mengubah statusnya.` : "Rencanakan program kerja divisi bersama-sama."}</span>}
         actions={(divisions.data?.length ?? 0) > 1 && (
           <Select value={divisionId} onChange={(e) => setDivisionId(e.target.value)} aria-label="Pilih divisi" className="w-auto">
             {divisions.data?.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -133,7 +136,12 @@ export default function PlanningPage() {
       {b && (
         <>
           {/* Ringkasan progres (mengikuti filter) */}
-          <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-[repeat(3,minmax(0,180px))_1fr]">
+          <div className="mb-3 flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 shadow-xs sm:hidden">
+            <p className="shrink-0 text-[13px] text-slate-600"><b className="text-slate-900 tabular-nums">{total}</b> kartu · <b className="text-green-700 tabular-nums">{finished}</b> selesai{late ? <> · <b className="text-red-600 tabular-nums">{late}</b> telat</> : null}</p>
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-green-500" style={{ width: `${total ? (finished / total) * 100 : 0}%` }} /></div>
+            <span className="text-xs font-medium text-slate-900 tabular-nums">{total ? Math.round((finished / total) * 100) : 0}%</span>
+          </div>
+          <div className="mb-4 hidden grid-cols-3 gap-2 sm:grid sm:gap-3 lg:grid-cols-[repeat(3,minmax(0,180px))_1fr]">
             {[
               { k: "Kartu", v: total, cls: "text-slate-900" },
               { k: "Selesai", v: finished, cls: "text-green-700" },
@@ -150,8 +158,14 @@ export default function PlanningPage() {
             </div>
           </div>
 
-          {/* Filter */}
-          <div className="mb-5 flex flex-wrap items-center gap-2">
+          {/* Filter: di HP cukup kotak cari + tombol Filter (berisi bulan & PIC) */}
+          <div className="mb-3 flex items-center gap-2 sm:hidden">
+            <Input icon={Search} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari kartu…" aria-label="Cari kartu" className="flex-1" />
+            <Button variant={showFilters || month !== "all" || pic ? "primary" : "outline"} onClick={() => setShowFilters((v) => !v)} aria-expanded={showFilters}>
+              <SlidersHorizontal size={15} aria-hidden /> Filter{(month !== "all" ? 1 : 0) + (pic ? 1 : 0) ? ` (${(month !== "all" ? 1 : 0) + (pic ? 1 : 0)})` : ""}
+            </Button>
+          </div>
+          <div className={cx("mb-4 flex-wrap items-center gap-2 sm:mb-5 sm:flex", showFilters ? "flex" : "hidden")}>
             <div className="inline-flex max-w-full items-center overflow-x-auto rounded-lg bg-slate-100 p-1 [scrollbar-width:none]" role="group" aria-label="Filter bulan tenggat">
               <FilterChip on={month === "all"} onClick={() => setMonth("all")}>Semua</FilterChip>
               <span className={cx("inline-flex shrink-0 items-center rounded-md", month !== "all" && month !== "none" && "bg-white shadow-sm")}>
@@ -169,7 +183,7 @@ export default function PlanningPage() {
               <option value="none">Belum ada PIC</option>
               {b.members.filter((m) => m.id !== me?.id).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
             </Select>
-            <Input icon={Search} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari kartu…" aria-label="Cari kartu" className="w-full sm:w-52" />
+            <Input icon={Search} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari kartu…" aria-label="Cari kartu" className="hidden sm:block sm:w-52" />
             {filtered && <Button variant="ghost" size="sm" onClick={() => { setMonth("all"); setPic(""); setQ(""); }}><X size={14} aria-hidden /> Reset</Button>}
           </div>
         </>
@@ -177,8 +191,28 @@ export default function PlanningPage() {
       {board.isLoading && <div className="flex gap-4 overflow-hidden">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-96 w-72 shrink-0 rounded-xl" />)}</div>}
 
       {b && (
+        <div className="sticky top-14 z-20 -mx-4 mb-2 flex gap-1.5 overflow-x-auto border-b border-slate-200/70 bg-background/95 px-4 py-2 backdrop-blur-sm [scrollbar-width:none] sm:hidden" role="tablist" aria-label="Pilih kolom">
+          {b.columns.map((col, ci) => (
+            <button
+              key={col.id}
+              role="tab"
+              aria-selected={colIdx === ci}
+              onClick={() => (boardRef.current?.children[ci] as HTMLElement | undefined)?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" })}
+              className={cx("inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[12.5px] font-medium transition", colIdx === ci ? "border-primary bg-primary text-white" : "border-slate-200 bg-white text-slate-600")}
+            >
+              <span className={cx("size-2 rounded-full", colIdx === ci ? "bg-white" : accentOf(col, ci))} aria-hidden />
+              {col.name}<span className={cx("tabular-nums", colIdx === ci ? "text-white/80" : "text-slate-400")}>{cardsOf(col.id).length}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {b && (
       <div className="flex items-start gap-4">
-        <div className={cx("-mx-4 flex min-w-0 flex-1 snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-6 sm:mx-0 sm:scroll-px-0 sm:px-0 [scrollbar-width:thin]", openId && "lg:pr-[440px]")}>
+        <div
+          ref={boardRef}
+          onScroll={(e) => { const el = e.currentTarget; const w = (el.children[0] as HTMLElement | undefined)?.offsetWidth ?? 1; setColIdx(Math.round(el.scrollLeft / (w + 12))); }}
+          className={cx("-mx-4 flex min-w-0 flex-1 snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-6 sm:mx-0 sm:scroll-px-0 sm:px-0 [scrollbar-width:thin]", openId && "lg:pr-[440px]")}>
           {b.columns.map((col, ci) => (
             <ColumnView
               key={col.id}

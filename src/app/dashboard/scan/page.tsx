@@ -61,7 +61,6 @@ export default function ScanPage() {
                 <p className="font-medium">Menunggu QR</p>
                 <ul className="mt-2 list-disc space-y-1 pl-4 text-[13px] text-slate-500">
                   <li>QR berganti tiap 20 detik; scan yang sedang tampil.</li>
-                  <li>Akun terikat ke satu perangkat. Ganti HP? Minta reset ke Sekretaris.</li>
                   <li>Beberapa kegiatan meminta izin lokasi.</li>
                 </ul>
               </div>

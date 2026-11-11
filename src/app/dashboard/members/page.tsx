@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Plus, Search, Smartphone, UserPlus, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileSpreadsheet, Plus, Search, UserPlus, Users } from "lucide-react";
 import { Dialog } from "@/components/dialog";
 import { MemberForm, ROLE_OPTIONS } from "@/components/member-form";
 import { Avatar, Badge, Button, EmptyState, Input, PageHeader, Select, Table, Td } from "@/components/ui";
@@ -10,6 +10,7 @@ import { apiPage, api } from "@/lib/api";
 import type { Division } from "@/lib/types";
 import { useMe } from "@/lib/use-me";
 import { MemberDirectory } from "@/components/member-directory";
+import { MemberImport } from "@/components/member-import";
 
 type Member = {
   id: string; name: string; email: string; avatarUrl: string | null; nim: string | null; status: string; deviceId: string | null;
@@ -32,6 +33,7 @@ function MembersAdmin() {
   const [role, setRole] = useState("");
   const [page, setPage] = useState(1);
   const [adding, setAdding] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const params = new URLSearchParams({ page: String(page), limit: String(LIMIT), ...(q && { q }), ...(divisionId && { divisionId }), ...(role && { role }) });
   const list = useQuery({ queryKey: ["users", "list", params.toString()], queryFn: () => apiPage<Member[]>(`/users?${params}`), placeholderData: (p) => p });
@@ -45,7 +47,12 @@ function MembersAdmin() {
       <PageHeader
         title="Anggota"
         desc={me?.role === "KADIV" ? `Anggota divisi ${me.division?.name ?? ""}, periode ${me.period?.name ?? ""}.` : `Pengurus dan anggota periode ${me?.period?.name ?? ""}.`}
-        actions={can("user.manage") && <Button onClick={() => setAdding(true)}><UserPlus size={16} aria-hidden /> Tambah anggota</Button>}
+        actions={can("user.manage") && (
+          <>
+            <Button variant="outline" onClick={() => setImporting(true)}><FileSpreadsheet size={16} aria-hidden /> Import Excel</Button>
+            <Button onClick={() => setAdding(true)}><UserPlus size={16} aria-hidden /> Tambah anggota</Button>
+          </>
+        )}
       />
       <Table
         loading={list.isLoading}
@@ -64,7 +71,7 @@ function MembersAdmin() {
             </Select>
           </>
         }
-        hideOnMobile={[2, 4]} head={["Anggota", "Jabatan", "Divisi", "Status", "Perangkat"]}
+        hideOnMobile={[2]} head={["Anggota", "Jabatan", "Divisi", "Status"]}
         empty={rows.length === 0 && (
           <EmptyState
             icon={Users}
@@ -104,11 +111,11 @@ function MembersAdmin() {
             </Td>
             <Td className="text-slate-600">{m.division?.name ?? "–"}</Td>
             <Td><Badge status={m.status} /></Td>
-            <Td>{m.deviceId ? <span className="inline-flex items-center gap-1.5 text-[13px] text-slate-600"><Smartphone size={14} aria-hidden /> Terikat</span> : <span className="text-[13px] text-slate-400">Belum</span>}</Td>
           </tr>
         ))}
       </Table>
 
+      <MemberImport open={importing} onClose={() => setImporting(false)} onDone={() => qc.invalidateQueries({ queryKey: ["users"] })} />
       <Dialog open={adding} onClose={() => setAdding(false)} variant="sheet" title="Tambah anggota" desc="Akun langsung aktif di periode berjalan.">
         <MemberForm isAdmin={me?.role === "SYS_ADMIN"} onCancel={() => setAdding(false)} onDone={() => { setAdding(false); qc.invalidateQueries({ queryKey: ["users"] }); }} />
       </Dialog>

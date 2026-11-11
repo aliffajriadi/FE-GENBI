@@ -307,6 +307,7 @@ export function Tabs<T extends string>({ value, onChange, items }: { value: T; o
       {items.map((it) => (
         <button
           key={it.value}
+          type="button" // tanpa ini, tab di dalam <form> ikut mengirim form
           role="tab"
           aria-selected={value === it.value}
           onClick={() => onChange(it.value)}

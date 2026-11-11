@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { use, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarCheck, ChevronRight, GraduationCap, Mail, MoreHorizontal, Pencil, Phone, Smartphone, Trophy, UserX } from "lucide-react";
+import { CalendarCheck, ChevronRight, GraduationCap, Mail, MoreHorizontal, Pencil, Phone, Trophy, UserX } from "lucide-react";
 import { Dialog } from "@/components/dialog";
 import { MemberForm } from "@/components/member-form";
 import { Menu, MenuItem } from "@/components/menu";
@@ -64,7 +64,6 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
               <span className="flex items-center gap-1.5"><Mail size={14} aria-hidden /> {u.email}</span>
               {u.phone && <span className="flex items-center gap-1.5"><Phone size={14} aria-hidden /> {u.phone}</span>}
               {(u.campus || u.nim) && <span className="flex items-center gap-1.5"><GraduationCap size={14} aria-hidden /> {[u.nim, u.campus, u.major, u.batch].filter(Boolean).join(" · ")}</span>}
-              <span className="flex items-center gap-1.5"><Smartphone size={14} aria-hidden /> {u.deviceId ? "Perangkat terikat" : "Belum ada perangkat"}</span>
             </div>
           </div>
           {manage && (
@@ -73,7 +72,6 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
               <Button variant="outline" onClick={() => setEditing(true)}><Pencil size={14} aria-hidden /> Ubah</Button>
               {u.id !== me?.id && (
                 <Menu trigger={() => <Button variant="outline" size="icon" aria-label="Aksi lain"><MoreHorizontal size={16} /></Button>}>
-                  {u.deviceId && <MenuItem icon={Smartphone} onClick={() => patch.mutate({ resetDevice: true })}>Reset perangkat</MenuItem>}
                   <MenuItem icon={UserX} danger={u.status === "ACTIVE"} onClick={() => patch.mutate({ status: u.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" })}>
                     {u.status === "ACTIVE" ? "Nonaktifkan akun" : "Aktifkan akun"}
                   </MenuItem>

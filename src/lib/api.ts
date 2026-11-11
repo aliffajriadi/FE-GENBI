@@ -65,6 +65,14 @@ export async function apiPage<T = unknown>(path: string, init?: Omit<RequestInit
 export const API_ORIGIN = BASE.startsWith("/") ? "" : new URL(BASE).origin;
 export const publicFile = (url: string | null | undefined) => (url ? (url.startsWith("/storage/") ? API_ORIGIN + url : url) : "");
 
+// Kirim file (multipart) ke endpoint yang membalas JSON standar { success, data }.
+export async function apiForm<T = unknown>(path: string, fd: FormData): Promise<T> {
+  const res = await raw(path, { method: "POST", body: fd });
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json?.success) throw new ApiError(json?.error?.code ?? "ERROR", json?.error?.message ?? "Gagal menghubungi server", res.status);
+  return json.data as T;
+}
+
 export type Uploaded = { id: string; url: string; mime: string; size: number };
 
 export const MAX_UPLOAD = 2 * 1024 * 1024; // sama dengan batas server

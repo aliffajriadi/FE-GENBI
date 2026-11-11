@@ -34,6 +34,8 @@ export function NotificationBell({ side = "bottom", align = "end" }: { side?: "t
 
   return (
     <Menu
+      // Di HP lonceng tidak di tepi layar, jadi panel dibuat menempel lebar layar (bukan menggantung dari lonceng).
+      panelClassName="max-sm:fixed max-sm:inset-x-3 max-sm:top-16 max-sm:mt-0"
       side={side}
       align={align}
       trigger={() => (
@@ -43,7 +45,7 @@ export function NotificationBell({ side = "bottom", align = "end" }: { side?: "t
         </button>
       )}
     >
-      <div className="w-[min(360px,calc(100vw-2rem))]">
+      <div className="w-full sm:w-[360px]">
         <div className="flex items-center justify-between px-3 py-2">
           <p className="text-[13px] font-semibold">Notifikasi</p>
           {unread > 0 && (

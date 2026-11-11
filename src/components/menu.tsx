@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { cx } from "./ui";
 
 // Dropdown sederhana: klik di luar / Esc menutup.
-export function Menu({ trigger, children, align = "end", side = "bottom" }: { trigger: (open: boolean) => React.ReactNode; children: React.ReactNode; align?: "start" | "end"; side?: "top" | "bottom" }) {
+export function Menu({ trigger, children, align = "end", side = "bottom", panelClassName }: { trigger: (open: boolean) => React.ReactNode; children: React.ReactNode; align?: "start" | "end"; side?: "top" | "bottom"; panelClassName?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -29,6 +29,7 @@ export function Menu({ trigger, children, align = "end", side = "bottom" }: { tr
             "pop-in absolute z-50 min-w-48 rounded-xl border border-slate-200 bg-white p-1 shadow-lg",
             align === "end" ? "right-0 origin-top-right" : "left-0 origin-top-left",
             side === "top" ? "bottom-full mb-2 [--pop-y:4px]" : "top-full mt-2",
+            panelClassName,
           )}
         >
           {children}
