@@ -1,0 +1,22 @@
+# Dependensi & hasil build Next
+node_modules/
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+
+# Rahasia (contoh nilai ada di .env.example)
+.env
+.env.*
+!.env.example
+
+# Sertifikat HTTPS lokal (buat ulang: pnpm cert)
+certificates/
+
+# Log
+*.log
+npm-debug.log*
+pnpm-debug.log*

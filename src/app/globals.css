@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+/*
+ * Design token GenBI (PRD bagian 12): primary #1E3A8A, netral slate, tanpa gradien/glass/blob.
+ * Nuansa SaaS: latar abu sangat muda, panel putih, border tipis, shadow minimal.
+ */
+:root {
+  --primary: #1e3a8a;
+  --primary-hover: #1e40af;
+  --primary-foreground: #ffffff;
+  --ring: #1e3a8a;
+  --accent: #eff6ff;
+  --accent-foreground: #1e3a8a;
+  --background: #f7f8fa;
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-ring: var(--ring);
+  --color-background: var(--background);
+  --font-sans: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-reading), Charter, Georgia, ui-serif, serif;
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.06), 0 1px 2px -1px rgb(15 23 42 / 0.04);
+  --shadow-lg: 0 12px 32px -8px rgb(15 23 42 / 0.18);
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  @apply bg-background text-sm text-slate-900 antialiased;
+  font-feature-settings: "cv11", "ss01", "ss03";
+  letter-spacing: -0.006em;
+}
+
+::selection {
+  @apply bg-blue-100 text-blue-950;
+}
+
+/* Native <dialog> untuk modal & sheet: fokus & Esc sudah ditangani browser. */
+dialog::backdrop {
+  background: rgb(15 23 42 / 0.4);
+}
+dialog[open] {
+  animation: dialog-in 160ms ease-out;
+}
+dialog.sheet[open] {
+  animation: sheet-in 200ms ease-out;
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+@keyframes sheet-in {
+  from { transform: translateX(24px); opacity: 0; }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* Tipografi isi artikel & notulen (markdown). */
+.md { @apply text-[15px] leading-7 text-slate-700; }
+.md > * + * { @apply mt-4; }
+.md h1, .md h2, .md h3 { @apply font-semibold tracking-tight text-slate-900; }
+.md h1 { @apply mt-8 text-2xl; }
+.md h2 { @apply mt-8 text-xl; }
+.md h3 { @apply mt-6 text-lg; }
+.md a { @apply text-primary underline underline-offset-2; }
+.md ul { @apply list-disc pl-6; }
+.md ol { @apply list-decimal pl-6; }
+.md li + li { @apply mt-1; }
+.md blockquote { @apply border-l-4 border-blue-200 bg-blue-50/50 py-2 pr-4 pl-4 text-slate-600; }
+.md code { @apply rounded bg-slate-100 px-1 py-0.5 font-mono text-[13px]; }
+.md pre { @apply overflow-x-auto rounded-lg bg-slate-900 p-4 text-[13px] text-slate-100; }
+.md pre code { @apply bg-transparent p-0; }
+.md img { @apply rounded-lg; }
+.md hr { @apply my-8 border-slate-200; }
+.md table { @apply w-full text-left text-sm; }
+.md th, .md td { @apply border-b border-slate-200 px-3 py-2; }
+
+/* ───── Tipografi artikel ala Medium/Ghost: isi serif 20px, judul sans tebal ───── */
+.story { @apply font-serif text-[20px] leading-[1.7] text-slate-800 sm:text-[21px]; }
+.story > * + * { @apply mt-[1.4em]; }
+.story h2 { @apply mt-[1.9em] font-serif text-[28px] leading-tight font-semibold tracking-[-0.01em] text-slate-900; }
+.story h3 { @apply mt-[1.6em] font-serif text-[23px] leading-snug font-semibold text-slate-900; }
+.story h2 + *, .story h3 + * { @apply mt-[0.6em]; }
+.story a { @apply underline decoration-slate-400 underline-offset-[3px] hover:decoration-slate-900; }
+.story strong { @apply font-semibold text-slate-900; }
+.story ul { @apply list-disc pl-7; }
+.story ol { @apply list-decimal pl-7; }
+.story li { @apply pl-1; }
+.story li + li { @apply mt-2; }
+.story li p { @apply m-0; }
+.story blockquote { @apply border-l-[3px] border-slate-900 pl-6 italic text-slate-700; }
+.story blockquote p { @apply m-0; }
+.story code { @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[0.8em]; }
+.story pre { @apply overflow-x-auto rounded-lg bg-slate-50 p-5 font-mono text-[15px] leading-relaxed text-slate-800 ring-1 ring-slate-200; }
+.story pre code { @apply bg-transparent p-0 text-[inherit]; }
+.story img { @apply mx-auto rounded-sm; }
+.story hr { @apply mx-auto my-12 h-auto w-auto border-0 text-center; }
+.story hr::before { content: "···"; @apply text-2xl tracking-[0.6em] text-slate-400; }
+
+/* Editor Tiptap */
+.story.ProseMirror { @apply outline-none; }
+.story .is-empty.is-editor-empty:first-child::before,
+.story p.is-empty:only-child::before { content: attr(data-placeholder); @apply pointer-events-none float-left h-0 text-slate-300; }
+.story img.ProseMirror-selectednode { @apply outline-2 outline-offset-4 outline-primary; }
+
+/* Muncul halus saat halaman dibuka (dimatikan oleh prefers-reduced-motion di atas). */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+}
+.rise { animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }

@@ -1,0 +1,42 @@
+{
+  "name": "@genbi/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "dev:https": "test -f certificates/dev.pem || pnpm cert; next dev -p 3000 --experimental-https --experimental-https-key certificates/dev-key.pem --experimental-https-cert certificates/dev.pem",
+    "cert": "mkdir -p certificates && openssl req -x509 -newkey rsa:2048 -nodes -days 825 -subj /CN=MyGenBI-dev -keyout certificates/dev-key.pem -out certificates/dev.pem",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "5.107.1",
+    "@tiptap/extension-bubble-menu": "3.32.0",
+    "@tiptap/extension-floating-menu": "3.32.0",
+    "@tiptap/extension-image": "3.32.0",
+    "@tiptap/extensions": "3.32.0",
+    "@tiptap/markdown": "3.32.0",
+    "@tiptap/pm": "3.32.0",
+    "@tiptap/react": "3.32.0",
+    "@tiptap/starter-kit": "3.32.0",
+    "lucide-react": "0.577.0",
+    "next": "15.5.29",
+    "qr-scanner": "1.4.2",
+    "qrcode": "1.5.4",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1",
+    "socket.io-client": "4.8.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.5",
+    "@types/node": "^22.15.0",
+    "@types/qrcode": "1.5.6",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "tailwindcss": "4.3.5",
+    "typescript": "5.9.3"
+  }
+}
