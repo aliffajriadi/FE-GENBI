@@ -25,6 +25,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => setDrawer(false), [path]);
 
   useEffect(() => {
+    if (!drawer) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setDrawer(false);
+    document.body.style.overflow = "hidden"; // halaman di belakang drawer tidak ikut ter-scroll
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [drawer]);
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -74,11 +85,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       href={href}
                       aria-current={active ? "page" : undefined}
                       className={cx(
-                        "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] transition-colors",
+                        "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] transition-[color,background-color,transform] duration-150 active:scale-[0.98]",
                         active ? "bg-accent font-medium text-accent-foreground" : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900",
                       )}
                     >
-                      <Icon size={17} strokeWidth={active ? 2.2 : 1.9} className={active ? "text-primary" : "text-slate-400 group-hover:text-slate-600"} aria-hidden />
+                      <Icon size={17} strokeWidth={active ? 2.2 : 1.9} className={cx("transition-[color,transform] duration-200", active ? "text-primary" : "text-slate-400 group-hover:translate-x-0.5 group-hover:text-slate-600")} aria-hidden />
                       {label}
                     </Link>
                   </li>
@@ -122,17 +133,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className="hidden border-r border-slate-200/80 bg-[#fbfbfc] print:hidden lg:sticky lg:top-0 lg:block lg:h-dvh">{sidebar}</aside>
 
       {/* Drawer mobile */}
-      {drawer && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-slate-900/40" onClick={() => setDrawer(false)} />
-          <aside className="absolute inset-y-0 left-0 w-[280px] bg-[#fbfbfc] shadow-lg">
-            <button onClick={() => setDrawer(false)} className="absolute top-4 right-3 rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label="Tutup menu">
-              <X size={18} />
-            </button>
-            {sidebar}
-          </aside>
-        </div>
-      )}
+      {/* Selalu ter-mount supaya bisa animasi buka & tutup; inert = tidak bisa difokus saat tertutup. */}
+      <div className={cx("fixed inset-0 z-40 lg:hidden", !drawer && "pointer-events-none")} inert={!drawer}>
+        <div className={cx("absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-300", drawer ? "opacity-100" : "opacity-0")} onClick={() => setDrawer(false)} />
+        <aside
+          className={cx(
+            "absolute inset-y-0 left-0 w-[280px] max-w-[85vw] bg-[#fbfbfc] shadow-lg transition-transform duration-300 ease-[var(--ease)]",
+            drawer ? "translate-x-0" : "-translate-x-full",
+          )}
+        >
+          <button onClick={() => setDrawer(false)} className="absolute top-4 right-3 rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label="Tutup menu">
+            <X size={18} />
+          </button>
+          {sidebar}
+        </aside>
+      </div>
 
       <div className="min-w-0">
         <header className="sticky top-0 z-30 flex h-14 print:hidden items-center gap-3 border-b border-slate-200/80 bg-white/95 px-4 backdrop-blur-sm lg:hidden">

@@ -16,7 +16,7 @@ export const Button = forwardRef<HTMLButtonElement, BtnProps>(({ variant = "prim
     ref={ref}
     disabled={disabled || loading}
     className={cx(
-      "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap transition-colors",
+      "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.97]",
       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50",
       size === "sm" && "h-8 px-3 text-xs",
       size === "md" && "h-9 px-3.5 text-sm",

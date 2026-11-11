@@ -44,24 +44,44 @@ body {
   @apply bg-blue-100 text-blue-950;
 }
 
-/* Native <dialog> untuk modal & sheet: fokus & Esc sudah ditangani browser. */
+/* ───── Gerak: satu kurva "ease-out" lembut untuk semua animasi ───── */
+:root {
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Native <dialog> untuk modal & sheet: fokus & Esc dari browser.
+   Animasi masuk DAN keluar via transition + @starting-style (browser lama: muncul/hilang biasa). */
+dialog {
+  opacity: 0;
+  transform: translateY(10px) scale(0.97);
+  transition: opacity 200ms var(--ease), transform 260ms var(--ease), overlay 260ms allow-discrete, display 260ms allow-discrete;
+}
+dialog[open] { opacity: 1; transform: none; }
+@starting-style { dialog[open] { opacity: 0; transform: translateY(10px) scale(0.97); } }
+dialog.sheet { opacity: 1; transform: translateX(100%); transition-duration: 320ms; }
+dialog.sheet[open] { transform: none; }
+@starting-style { dialog.sheet[open] { transform: translateX(100%); } }
 dialog::backdrop {
-  background: rgb(15 23 42 / 0.4);
+  background: rgb(15 23 42 / 0);
+  backdrop-filter: blur(0);
+  transition: background 260ms var(--ease), backdrop-filter 260ms var(--ease), overlay 260ms allow-discrete, display 260ms allow-discrete;
 }
-dialog[open] {
-  animation: dialog-in 160ms ease-out;
+dialog[open]::backdrop { background: rgb(15 23 42 / 0.4); backdrop-filter: blur(2px); }
+@starting-style { dialog[open]::backdrop { background: rgb(15 23 42 / 0); backdrop-filter: blur(0); } }
+
+/* Pindah halaman: konten naik halus. fill "backwards" supaya transform tidak tertinggal (aman untuk elemen fixed). */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
 }
-dialog.sheet[open] {
-  animation: sheet-in 200ms ease-out;
+.page-in { animation: page-in 320ms var(--ease) backwards; }
+
+/* Dropdown & toast */
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(var(--pop-y, -4px)) scale(0.96); }
 }
-@keyframes dialog-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
-}
-@keyframes sheet-in {
-  from { transform: translateX(24px); opacity: 0; }
-}
+.pop-in { animation: pop-in 160ms var(--ease) backwards; }
 @keyframes toast-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
 }
 
 @media (prefers-reduced-motion: reduce) {

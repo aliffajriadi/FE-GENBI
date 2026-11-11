@@ -26,9 +26,9 @@ export function Menu({ trigger, children, align = "end", side = "bottom" }: { tr
           role="menu"
           onClick={() => setOpen(false)}
           className={cx(
-            "absolute z-50 min-w-48 rounded-xl border border-slate-200 bg-white p-1 shadow-lg",
-            align === "end" ? "right-0" : "left-0",
-            side === "top" ? "bottom-full mb-2" : "top-full mt-2",
+            "pop-in absolute z-50 min-w-48 rounded-xl border border-slate-200 bg-white p-1 shadow-lg",
+            align === "end" ? "right-0 origin-top-right" : "left-0 origin-top-left",
+            side === "top" ? "bottom-full mb-2 [--pop-y:4px]" : "top-full mt-2",
           )}
         >
           {children}

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { cx } from "./ui";
 
@@ -30,6 +30,13 @@ export function Dialog({
     if (open && !d.open) d.showModal();
     if (!open && d.open) d.close();
   }, [open]);
+  // Isi tetap dirender selama animasi tutup (lihat globals.css), baru dilepas sesudahnya.
+  const [mounted, setMounted] = useState(open);
+  useEffect(() => {
+    if (open) return setMounted(true);
+    const t = setTimeout(() => setMounted(false), 320);
+    return () => clearTimeout(t);
+  }, [open]);
 
   const sheet = variant === "sheet";
   return (
@@ -45,7 +52,7 @@ export function Dialog({
           : cx("m-auto w-[calc(100%-2rem)] rounded-xl border border-slate-200", size === "sm" ? "max-w-sm" : size === "lg" ? "max-w-2xl" : "max-w-lg"),
       )}
     >
-      {open && (
+      {mounted && (
         <div className={cx("flex flex-col", sheet ? "h-full" : "max-h-[85dvh]")}>
           <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
             <div>
