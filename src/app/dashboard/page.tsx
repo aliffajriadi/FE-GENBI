@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CalendarCheck, CalendarX2, CheckSquare, Clock, Inbox, MapPin, Radio, ScanLine, Trophy, Users, Wallet } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarCheck, CalendarX2, CheckSquare, Clock, Inbox, Landmark, MapPin, Radio, ScanLine, Trophy, Users, Wallet } from "lucide-react";
+import { AttendanceMix, AttendanceTrend, PointsGrowth, type TrendPoint } from "@/components/dashboard-charts";
 import { Avatar, Badge, Button, Card, CardHeader, DateTile, EmptyState, PageHeader, Skeleton, StatCard } from "@/components/ui";
 import { api } from "@/lib/api";
 import { EVENT_TYPE_LABEL, fmtTime, greeting, rupiah } from "@/lib/format";
@@ -17,7 +18,9 @@ type Dash = {
   bills: { count: number; amount: number };
   tasks: { id: string; title: string; dueDate: string | null; minute: { event: { title: string } } }[];
   pendingPayments: number | null;
+  attendanceTrend?: TrendPoint[]; // opsional: backend versi lama belum mengirimnya
 };
+type Indicators = { updatedAt: string; source: string; items: { key: string; label: string; value: string; period: string | null }[] };
 type Board = { rank: number; userId: string; name: string; avatarUrl: string | null; division: string | null; points: number }[];
 type AttMe = { id: string; status: string }[];
 
@@ -27,9 +30,17 @@ export default function DashboardPage() {
   const board = useQuery({ queryKey: ["leaderboard", ""], queryFn: () => api<Board>("/points/leaderboard") });
   const mine = useQuery({ queryKey: ["points-me"], queryFn: () => api<{ total: number; history: Ledger[] }>("/points/me") });
   const att = useQuery({ queryKey: ["attendance-me"], queryFn: () => api<AttMe>("/attendance/me") });
+  const bi = useQuery({ queryKey: ["bi-indicators"], queryFn: () => api<Indicators>("/public/bi-indicators"), staleTime: 30 * 60_000 });
   const d = dash.data;
 
   const attended = att.data?.filter((a) => a.status === "HADIR" || a.status === "TELAT").length ?? 0;
+  const mix = { hadir: 0, telat: 0, izin: 0, alpa: 0 };
+  for (const a of att.data ?? []) {
+    if (a.status === "HADIR") mix.hadir++;
+    else if (a.status === "TELAT") mix.telat++;
+    else if (a.status === "ALPA") mix.alpa++;
+    else mix.izin++;
+  }
   const rate = att.data?.length ? Math.round((attended / att.data.length) * 100) : null;
   const today = new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Jakarta" });
 
@@ -87,8 +98,41 @@ export default function DashboardPage() {
         )}
       </div>
 
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card className="min-w-0 pb-4">
+          <CardHeader title="Tren kehadiran" desc="Persentase hadir di 8 kegiatan terakhir" icon={CalendarCheck} />
+          <div className="pt-4">
+            {dash.isLoading ? <Skeleton className="mx-5 h-52" /> : d?.attendanceTrend?.length ? <AttendanceTrend data={d.attendanceTrend} /> : <EmptyState icon={CalendarCheck} title="Belum ada data" desc="Muncul setelah ada kegiatan yang absensinya ditutup." />}
+          </div>
+        </Card>
+        <Card className="min-w-0 pb-4">
+          <CardHeader title="Pertumbuhan poin" desc="Akumulasi poin Anda periode ini" icon={Trophy} />
+          <div className="pt-4">{mine.isLoading ? <Skeleton className="mx-5 h-52" /> : <PointsGrowth history={mine.data?.history ?? []} />}</div>
+        </Card>
+      </div>
+
+      {!!bi.data?.items.length && (
+        <Card className="mt-6">
+          <CardHeader
+            title="Indikator Bank Indonesia"
+            desc={`Diperbarui ${new Date(bi.data.updatedAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`}
+            icon={Landmark}
+            action={<a href={bi.data.source} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:underline">bi.go.id <ArrowUpRight size={13} aria-hidden /></a>}
+          />
+          <dl className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5">
+            {bi.data.items.map((i) => (
+              <div key={i.key} className="border-b border-slate-100 px-5 py-4 sm:border-r">
+                <dt className="text-xs text-slate-500">{i.label}</dt>
+                <dd className="mt-1 font-serif text-[22px] leading-tight font-medium text-slate-900 tabular-nums">{i.value}</dd>
+                {i.period && <dd className="mt-0.5 text-[11px] text-slate-400">{i.period}</dd>}
+              </div>
+            ))}
+          </dl>
+        </Card>
+      )}
+
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <Card>
+        <Card className="self-start">
           <CardHeader title="Kegiatan terdekat" desc="Rapat & kegiatan yang perlu Anda hadiri" action={<Link href="/dashboard/events" className="text-[13px] font-medium text-primary hover:underline">Lihat semua</Link>} />
           {dash.isLoading ? (
             <div className="space-y-3 p-5">{Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-14" />)}</div>
@@ -134,6 +178,10 @@ export default function DashboardPage() {
               </ul>
             </Card>
           )}
+          <Card>
+            <CardHeader title="Kehadiran saya" desc={att.data?.length ? `${att.data.length} kegiatan tercatat` : undefined} />
+            <div className="pt-4">{att.isLoading ? <Skeleton className="mx-5 mb-5 h-16" /> : <AttendanceMix counts={mix} />}</div>
+          </Card>
           <Card>
             <CardHeader title="Leaderboard" desc="Top 5 kepengurusan ini" action={<Link href="/dashboard/points" className="text-[13px] font-medium text-primary hover:underline">Detail</Link>} />
             <ol className="p-2">

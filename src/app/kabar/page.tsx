@@ -3,6 +3,6 @@ import { ArticleIndex } from "@/components/site/article-index";
 
 export const metadata: Metadata = { title: "Kabar GenBI · MyGenBI", description: "Liputan kegiatan dan kabar resmi dari pengurus GenBI." };
 
-export default async function Page({ searchParams }: { searchParams: Promise<{ tag?: string; q?: string }> }) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ tag?: string; q?: string; sort?: string; page?: string }> }) {
   return <ArticleIndex kind="NEWS" {...await searchParams} />;
 }
