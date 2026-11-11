@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   ScanLine,
   Settings,
+  Smartphone,
   SlidersHorizontal,
   Trophy,
   UserRound,
@@ -65,6 +66,7 @@ export const NAV: { section: string; items: NavItem[] }[] = [
     items: [
       { href: "/dashboard/notifications", label: "Notifikasi", icon: Bell },
       { href: "/dashboard/profile", label: "Profil saya", icon: UserRound },
+      { href: "/dashboard/download", label: "Unduh aplikasi", icon: Smartphone },
     ],
   },
 ];
