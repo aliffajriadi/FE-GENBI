@@ -41,7 +41,7 @@ export default function LoginPage() {
           <ArrowLeft size={15} aria-hidden /> Kembali ke beranda
         </Link>
         <div className="m-auto w-full max-w-sm py-12">
-          <span className="grid size-10 place-items-center rounded-xl bg-primary text-base font-bold text-white">G</span>
+          <img src="/logo.png" alt="GenBI" width={48} height={48} className="size-12" />
           <h1 className="mt-6 font-serif text-[32px] font-medium tracking-[-0.01em]">Masuk ke MyGenBI</h1>
           <p className="mt-1.5 text-slate-500">Akun dibuat oleh Sekretaris. Lupa password? Hubungi Sekretaris atau admin.</p>
           <form method="post" onSubmit={onSubmit} className="mt-8 grid gap-4">

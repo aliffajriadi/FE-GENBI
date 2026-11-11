@@ -1,16 +1,18 @@
 @import "tailwindcss";
 
 /*
- * Design token GenBI (PRD bagian 12): primary #1E3A8A, netral slate, tanpa gradien/glass/blob.
+ * Design token GenBI: warna mengikuti logo, netral slate, tanpa gradien/glass/blob.
  * Nuansa SaaS: latar abu sangat muda, panel putih, border tipis, shadow minimal.
  */
 :root {
-  --primary: #1e3a8a;
-  --primary-hover: #1e40af;
+  /* Warna diambil dari logo GenBI: biru #11418b (utama) & merah #d9261c (aksen kecil). */
+  --primary: #11418b;
+  --primary-hover: #0c3270;
   --primary-foreground: #ffffff;
-  --ring: #1e3a8a;
-  --accent: #eff6ff;
-  --accent-foreground: #1e3a8a;
+  --ring: #11418b;
+  --accent: #edf2fa;
+  --accent-foreground: #11418b;
+  --brand-red: #d9261c;
   --background: #f7f8fa;
   --radius: 0.5rem;
 }
@@ -22,6 +24,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-ring: var(--ring);
+  --color-brand-red: var(--brand-red);
   --color-background: var(--background);
   --font-sans: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-reading), Charter, Georgia, ui-serif, serif;

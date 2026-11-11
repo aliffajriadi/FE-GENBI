@@ -25,7 +25,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
       <Card className="p-8 print:border-0 print:shadow-none">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2.5">
-            <span className="grid size-9 place-items-center rounded-lg bg-primary text-sm font-bold text-white">G</span>
+            <img src="/logo.png" alt="" width={40} height={40} className="size-10" />
             <div><p className="font-semibold">GenBI</p><p className="text-xs text-slate-500">Kwitansi uang kas</p></div>
           </div>
           <p className="text-right text-xs text-slate-500">No. {p.id.slice(-8).toUpperCase()}<br />{fmtDate(p.updatedAt)}</p>

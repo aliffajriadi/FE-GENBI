@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { publicImg } from "./public-api";
+import { ScrollHeader } from "./scroll-header";
 
 const NAV = [
   { href: "/kabar", label: "Kabar" },
@@ -9,22 +10,28 @@ const NAV = [
   { href: "/anggota", label: "Anggota" },
 ];
 
-export function Logo({ light }: { light?: boolean }) {
+// overlay: logo putih di atas hero, berganti logo berwarna saat header sudah di-scroll.
+export function Logo({ overlay }: { overlay?: boolean }) {
   return (
     <Link href="/" className="flex items-center gap-2.5" aria-label="MyGenBI, beranda">
-      <span className={`grid size-8 place-items-center rounded-lg font-serif text-[17px] font-semibold ${light ? "bg-white text-primary" : "bg-primary text-white"}`}>G</span>
-      <span className={`font-serif text-[19px] font-medium tracking-tight ${light ? "text-white" : ""}`}>MyGenBI</span>
+      {overlay && <img src="/logo-white.png" alt="" width={36} height={36} className={`size-9 group-data-[scrolled=true]/h:hidden`} />}
+      <img src="/logo.png" alt="" width={36} height={36} className={overlay ? `hidden size-9 group-data-[scrolled=true]/h:block` : "size-9"} />
+      <span className={`font-serif text-[19px] font-medium tracking-tight transition-colors ${overlay ? `text-white group-data-[scrolled=true]/h:text-slate-900` : "text-slate-900"}`}>MyGenBI</span>
     </Link>
   );
 }
 
-// overlay: header transparan di atas foto hero (beranda).
+// overlay (beranda): transparan dengan teks putih di atas foto hero, lalu ikut turun sebagai header putih saat di-scroll.
 export function SiteHeader({ active, overlay }: { active?: string; overlay?: boolean }) {
-  const link = (on: boolean) => (overlay ? (on ? "bg-white/15 text-white" : "text-white/85 hover:text-white") : on ? "bg-slate-100 text-slate-900" : "text-slate-600 hover:text-slate-900");
-  return (
-    <header className={overlay ? "absolute inset-x-0 top-0 z-30" : "sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-md"}>
+  const solid = (on: boolean) => (on ? "bg-slate-100 text-slate-900" : "text-slate-600 hover:text-slate-900");
+  const link = (on: boolean) =>
+    overlay
+      ? on ? `bg-white/15 text-white group-data-[scrolled=true]/h:bg-slate-100 group-data-[scrolled=true]/h:text-slate-900` : `text-white/85 hover:text-white group-data-[scrolled=true]/h:text-slate-600 group-data-[scrolled=true]/h:hover:text-slate-900`
+      : solid(on);
+  const inner = (
+    <>
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-5 sm:h-20 sm:px-6">
-        <Logo light={overlay} />
+        <Logo overlay={overlay} />
         <nav className="hidden gap-1 text-[14px] md:flex" aria-label="Navigasi situs">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} aria-current={active === n.href ? "page" : undefined}
@@ -33,16 +40,23 @@ export function SiteHeader({ active, overlay }: { active?: string; overlay?: boo
             </Link>
           ))}
         </nav>
-        <Link href="/login" className={`ml-auto inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[14px] font-medium transition-colors ${overlay ? "bg-white text-slate-900 hover:bg-slate-100" : "bg-slate-900 text-white hover:bg-slate-700"}`}>
+        <Link href="/login" className={`ml-auto inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[14px] font-medium transition-colors ${overlay ? `bg-white text-slate-900 hover:bg-slate-100 group-data-[scrolled=true]/h:bg-primary group-data-[scrolled=true]/h:text-white group-data-[scrolled=true]/h:hover:bg-primary-hover` : "bg-primary text-white hover:bg-primary-hover"}`}>
           Masuk <ArrowRight size={15} aria-hidden />
         </Link>
       </div>
       <nav className="flex gap-1 overflow-x-auto px-3 pb-2.5 text-[14px] md:hidden" aria-label="Navigasi situs">
         {NAV.map((n) => (
-          <Link key={n.href} href={n.href} className={`shrink-0 rounded-full px-3 py-1 ${link(active === n.href)}`}>{n.label}</Link>
+          <Link key={n.href} href={n.href} className={`shrink-0 rounded-full px-3 py-1 transition-colors ${link(active === n.href)}`}>{n.label}</Link>
         ))}
       </nav>
-    </header>
+    </>
+  );
+  return overlay ? (
+    <ScrollHeader className="fixed inset-x-0 top-0 z-30 border-b border-transparent transition-[background-color,border-color,box-shadow] duration-300 data-[scrolled=true]:border-slate-200/70 data-[scrolled=true]:bg-white/90 data-[scrolled=true]:shadow-xs data-[scrolled=true]:backdrop-blur-md">
+      {inner}
+    </ScrollHeader>
+  ) : (
+    <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-md">{inner}</header>
   );
 }
 

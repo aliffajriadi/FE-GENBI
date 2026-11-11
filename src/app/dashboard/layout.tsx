@@ -55,7 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-2.5 px-5">
-        <span className="grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-white">G</span>
+        <img src="/logo.png" alt="" width={34} height={34} className="size-[34px]" />
         <div className="flex-1 leading-tight">
           <p className="text-[15px] font-semibold text-slate-900">MyGenBI</p>
           <p className="text-[11px] text-slate-500">{me?.period ? `Periode ${me.period.name}` : "Platform organisasi"}</p>

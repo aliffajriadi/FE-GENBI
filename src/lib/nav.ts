@@ -1,4 +1,5 @@
 import {
+  Bell,
   CalendarCheck,
   FolderOpen,
   MessagesSquare,
@@ -59,7 +60,10 @@ export const NAV: { section: string; items: NavItem[] }[] = [
   },
   {
     section: "Akun",
-    items: [{ href: "/dashboard/profile", label: "Profil saya", icon: UserRound }],
+    items: [
+      { href: "/dashboard/notifications", label: "Notifikasi", icon: Bell },
+      { href: "/dashboard/profile", label: "Profil saya", icon: UserRound },
+    ],
   },
 ];
 

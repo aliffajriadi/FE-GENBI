@@ -44,7 +44,7 @@ export default async function Home() {
 
         <div className="mx-auto max-w-6xl px-5 pt-36 sm:px-6 sm:pt-44">
           <div className="rise max-w-3xl">
-            {stats.period && <p className="flex items-center gap-3 text-[14px] text-white/80"><span className="h-px w-8 bg-white/60" aria-hidden />Kepengurusan {stats.period}</p>}
+            {stats.period && <p className="flex items-center gap-3 text-[14px] text-white/80"><span className="h-0.5 w-8 rounded-full bg-brand-red" aria-hidden />Kepengurusan {stats.period}</p>}
             <h1 className="mt-5 font-serif text-[48px] leading-[1.02] font-medium tracking-[-0.025em] text-balance text-white [text-shadow:0_2px_24px_rgb(0_0_0/0.35)] sm:text-[76px]">{site.headline}</h1>
             {site.subheadline && <p className="mt-6 max-w-xl text-[18px] leading-relaxed text-white/90 [text-shadow:0_1px_12px_rgb(0_0_0/0.4)]">{site.subheadline}</p>}
             <div className="mt-9 flex flex-wrap gap-3">

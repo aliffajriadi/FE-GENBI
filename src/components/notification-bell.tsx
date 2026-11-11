@@ -1,19 +1,30 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, CheckCheck } from "lucide-react";
+import Link from "next/link";
+import { Bell, CalendarCheck, CheckCheck, FolderOpen, Newspaper, UserCog, Wallet, type LucideIcon } from "lucide-react";
 import { Menu } from "./menu";
 import { cx } from "./ui";
 import { api } from "@/lib/api";
 import { fmtRelative } from "@/lib/format";
 
-type Notif = { id: string; type: string; title: string; body: string | null; data: { link?: string } | null; readAt: string | null; createdAt: string };
+export type Notif = { id: string; type: string; title: string; body: string | null; data: { link?: string } | null; readAt: string | null; createdAt: string };
+// Ikon & warna per jenis notifikasi (berdasarkan awalan type dari backend).
+export function notifIcon(type: string): { icon: LucideIcon; tone: string } {
+  if (/^(EVENT|LEAVE)/.test(type)) return { icon: CalendarCheck, tone: "bg-blue-50 text-blue-700" };
+  if (/^(BILL|PAYMENT)/.test(type)) return { icon: Wallet, tone: "bg-emerald-50 text-emerald-700" };
+  if (type.startsWith("ARTICLE")) return { icon: Newspaper, tone: "bg-violet-50 text-violet-700" };
+  if (type.startsWith("DIVISION")) return { icon: UserCog, tone: "bg-amber-50 text-amber-700" };
+  if (/^(DISPOSITION|ACTION_ITEM|IN)$/.test(type)) return { icon: FolderOpen, tone: "bg-sky-50 text-sky-700" };
+  return { icon: Bell, tone: "bg-slate-100 text-slate-600" };
+}
+
 
 export function NotificationBell({ side = "bottom", align = "end" }: { side?: "top" | "bottom"; align?: "start" | "end" }) {
   const router = useRouter();
   const qc = useQueryClient();
   // shortcut: polling 60 dtk; ganti ke Socket.IO saat modul chat dibuat.
-  const q = useQuery({ queryKey: ["notifications"], queryFn: () => api<{ items: Notif[]; unread: number }>("/notifications"), refetchInterval: 60_000 });
+  const q = useQuery({ queryKey: ["notifications"], queryFn: () => api<{ items: Notif[]; unread: number }>("/notifications?limit=8"), refetchInterval: 60_000 });
   const read = useMutation({
     mutationFn: (ids?: string[]) => api("/notifications/read", { method: "POST", body: ids ? { ids } : {} }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
@@ -40,7 +51,7 @@ export function NotificationBell({ side = "bottom", align = "end" }: { side?: "t
             </button>
           )}
         </div>
-        <ul className="max-h-[420px] overflow-y-auto border-t border-slate-100">
+        <ul className="max-h-[400px] overflow-y-auto border-t border-slate-100">
           {q.data?.items.length === 0 && <li className="px-4 py-10 text-center text-[13px] text-slate-500">Belum ada notifikasi.</li>}
           {q.data?.items.map((n) => (
             <li key={n.id}>
@@ -51,16 +62,20 @@ export function NotificationBell({ side = "bottom", align = "end" }: { side?: "t
                 }}
                 className={cx("flex w-full gap-3 px-3 py-2.5 text-left hover:bg-slate-50", !n.readAt && "bg-blue-50/40")}
               >
-                <span className={cx("mt-1.5 size-2 shrink-0 rounded-full", n.readAt ? "bg-transparent" : "bg-primary")} aria-hidden />
+                {(() => { const { icon: Icon, tone } = notifIcon(n.type); return <span className={cx("grid size-8 shrink-0 place-items-center rounded-full", tone)}><Icon size={15} aria-hidden /></span>; })()}
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13px] font-medium text-slate-900">{n.title}</span>
                   {n.body && <span className="mt-0.5 line-clamp-2 block text-xs text-slate-500">{n.body}</span>}
                   <span className="mt-1 block text-[11px] text-slate-400">{fmtRelative(n.createdAt)}</span>
                 </span>
+                {!n.readAt && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" aria-label="Belum dibaca" />}
               </button>
             </li>
           ))}
         </ul>
+        <Link href="/dashboard/notifications" className="block border-t border-slate-100 px-3 py-2.5 text-center text-[13px] font-medium text-primary hover:bg-slate-50">
+          Lihat semua notifikasi
+        </Link>
       </div>
     </Menu>
   );
