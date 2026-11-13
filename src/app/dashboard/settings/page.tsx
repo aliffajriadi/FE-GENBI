@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Check, ExternalLink, FolderTree, ImagePlus, Loader2, Lock, Pencil, Plus, Smartphone, Trash2 } from "lucide-react";
+import { CalendarRange, Check, ExternalLink, FolderTree, ImagePlus, Instagram, Loader2, Lock, Pencil, Plus, Smartphone, Trash2 } from "lucide-react";
 import { Dialog } from "@/components/dialog";
 import { useToast } from "@/components/toast";
 import { Badge, Button, Card, CardHeader, cx, EmptyState, ErrorText, Field, Input, PageHeader, Table, Tabs, Td, Textarea } from "@/components/ui";
@@ -15,7 +15,8 @@ import type { AppVersion } from "@/lib/app-guide";
 type Period = { id: string; name: string; startDate: string; endDate: string; isActive: boolean };
 type Role = { id: string; key: string; name: string; permissions: string[] };
 type Perm = { key: string; label: string };
-type TabKey = "site" | "divisions" | "periods" | "roles" | "app";
+type TabKey = "site" | "divisions" | "periods" | "roles" | "app" | "instagram";
+type IgStatus = { appId: string; hasSecret: boolean; redirectUri: string; connected: boolean; username: string | null; expiresAt: string | null; connectedAt: string | null };
 
 export default function SettingsPage() {
   const { can } = useMe();
@@ -23,9 +24,14 @@ export default function SettingsPage() {
     ...(can("article.publish") ? [{ value: "site" as const, label: "Tampilan web" }] : []),
     ...(can("division.manage") ? [{ value: "divisions" as const, label: "Divisi" }, { value: "periods" as const, label: "Periode" }] : []),
     ...(can("role.manage") ? [{ value: "roles" as const, label: "Role & akses" }] : []),
-    ...(can("settings.manage") ? [{ value: "app" as const, label: "Aplikasi mobile" }] : []),
+    ...(can("settings.manage") ? [{ value: "app" as const, label: "Aplikasi mobile" }, { value: "instagram" as const, label: "Instagram" }] : []),
   ];
   const [tab, setTab] = useState<TabKey>("site");
+  // Kembali dari halaman izin Instagram: ?tab=instagram&ig=ok|denied|invalid|error
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t === "instagram") setTab("instagram");
+  }, []);
   const active = tabs.find((t) => t.value === tab) ? tab : tabs[0]?.value;
 
   return (
@@ -37,6 +43,7 @@ export default function SettingsPage() {
       {active === "roles" && <Roles />}
       {active === "site" && <SiteSettings />}
       {active === "app" && <AppVersionSettings />}
+      {active === "instagram" && <InstagramSettings />}
     </>
   );
 }
@@ -337,6 +344,123 @@ function AppVersionSettings() {
           <li>Kalau versi lama harus berhenti dipakai (mis. ada bug absensi), naikkan juga <b>Versi minimal</b>. Aplikasi versi lama langsung terkunci dan hanya menampilkan tombol perbarui.</li>
         </ol>
         <p className="mt-3 text-slate-500">Isi <b>0.0.0</b> di kedua kolom untuk mematikan pengecekan.</p>
+      </Card>
+    </div>
+  );
+}
+
+// Hubungkan akun Instagram (Professional) untuk bagian Instagram di landing page. Semua persiapan lewat sini.
+function InstagramSettings() {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const q = useQuery({ queryKey: ["ig-status"], queryFn: () => api<IgStatus>("/instagram/status") });
+  const [appId, setAppId] = useState<string | null>(null);
+  const [secret, setSecret] = useState("");
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    const r = new URLSearchParams(window.location.search).get("ig");
+    if (!r) return;
+    const msg: Record<string, string> = { ok: "Instagram terhubung. Landing page diperbarui dalam ±30 menit.", denied: "Izin Instagram dibatalkan.", invalid: "Sesi menghubungkan kedaluwarsa, coba lagi.", error: "Gagal menghubungkan Instagram. Pastikan akunnya Professional (Bisnis/Kreator), sudah jadi tester, dan redirect URI sama persis." };
+    toast(msg[r] ?? msg.error, { error: r !== "ok" });
+    window.history.replaceState(null, "", "/dashboard/settings");
+  }, [toast]);
+  const saveApp = useMutation({
+    mutationFn: () => api("/instagram/app", { method: "PUT", body: { appId: (appId ?? q.data?.appId ?? "").trim(), appSecret: secret.trim() } }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["ig-status"] }); setSecret(""); toast("Aplikasi Meta tersimpan"); },
+    onError: (e) => toast(e.message, { error: true }),
+  });
+  const connect = useMutation({
+    mutationFn: () => api<{ url: string }>("/instagram/connect"),
+    onSuccess: ({ url }) => { window.location.href = url; },
+    onError: (e) => toast(e.message, { error: true }),
+  });
+  const disconnect = useMutation({
+    mutationFn: () => api("/instagram", { method: "DELETE" }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["ig-status"] }); toast("Instagram diputus. Bagian Instagram hilang dari landing page."); },
+  });
+  const s = q.data;
+  if (!s) return <Card className="p-6"><Loader2 className="animate-spin text-slate-400" aria-hidden /></Card>;
+  const ready = !!s.appId && s.hasSecret;
+  const days = s.expiresAt ? Math.round((new Date(s.expiresAt).getTime() - Date.now()) / 86_400_000) : null;
+  const step = (n: number, done: boolean) => <span className={cx("grid size-6 shrink-0 place-items-center rounded-full text-xs font-semibold", done ? "bg-green-600 text-white" : "bg-slate-100 text-slate-600")}>{done ? <Check size={13} aria-hidden /> : n}</span>;
+
+  return (
+    <div className="grid max-w-3xl gap-6">
+      {/* 1. Siapkan akun & aplikasi Meta (di luar web ini) */}
+      <Card className="p-5">
+        <div className="flex gap-3">
+          {step(1, ready)}
+          <div className="min-w-0 flex-1 text-[13.5px] text-slate-600">
+            <p className="text-[15px] font-semibold text-slate-900">Siapkan akun Instagram & aplikasi Meta</p>
+            <p className="mt-1 text-[13px] text-slate-500">Dua hal ini memang harus di Instagram/Meta, tidak bisa dari web kita.</p>
+            <ol className="mt-3 grid list-decimal gap-2 pl-4">
+              <li>Ubah akun Instagram GenBI menjadi akun <b>Professional</b> (Bisnis atau Kreator) lewat Setelan Instagram.</li>
+              <li>Buka <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">developers.facebook.com/apps</a> → buat aplikasi → tambahkan produk <b>Instagram</b> → <i>API setup with Instagram login</i>.</li>
+              <li>
+                Di <i>Set up Instagram business login</i>, tempel redirect URI ini:
+                <span className="mt-1.5 flex items-center gap-2">
+                  <code className="min-w-0 flex-1 rounded bg-slate-100 px-2 py-1.5 break-all">{s.redirectUri}</code>
+                  <Button type="button" size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(s.redirectUri); setCopied(true); setTimeout(() => setCopied(false), 1500); }}>{copied ? "Tersalin" : "Salin"}</Button>
+                </span>
+                {s.redirectUri.startsWith("http://") && <span className="mt-1 block text-[12.5px] text-amber-700">Instagram mewajibkan https. Pastikan nginx mengirim header <code>X-Forwarded-Proto</code>, atau buka panel ini lewat alamat https.</span>}
+              </li>
+              <li>Di <i>App roles → Roles</i>, tambahkan akun GenBI sebagai <b>Instagram tester</b>, lalu terima undangannya di Instagram (Setelan → Aplikasi dan situs web).</li>
+            </ol>
+          </div>
+        </div>
+      </Card>
+
+      {/* 2. App ID & secret */}
+      <Card className="p-5">
+        <form className="flex gap-3" onSubmit={(e) => { e.preventDefault(); saveApp.mutate(); }}>
+          {step(2, ready)}
+          <div className="grid min-w-0 flex-1 gap-4">
+            <div>
+              <p className="text-[15px] font-semibold text-slate-900">Isi Instagram app ID & secret</p>
+              <p className="mt-1 text-[13px] text-slate-500">Ada di halaman <i>API setup with Instagram login</i> aplikasi Meta tadi. Secret disimpan terenkripsi dan tidak ditampilkan lagi.</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Instagram app ID"><Input value={appId ?? s.appId} onChange={(e) => setAppId(e.target.value)} required inputMode="numeric" pattern="\d{5,30}" placeholder="1234567890123456" /></Field>
+              <Field label="Instagram app secret" hint={s.hasSecret ? "Kosongkan bila tidak diganti." : undefined}>
+                <Input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} required={!s.hasSecret} autoComplete="off" placeholder={s.hasSecret ? "•••••••• (tersimpan)" : "Tempel app secret"} />
+              </Field>
+            </div>
+            <div><Button type="submit" variant={ready ? "outline" : "primary"} loading={saveApp.isPending}>Simpan</Button></div>
+          </div>
+        </form>
+      </Card>
+
+      {/* 3. Login Instagram */}
+      <Card className="p-5">
+        <div className="flex gap-3">
+          {step(3, s.connected)}
+          <div className="grid min-w-0 flex-1 gap-3">
+            <div>
+              <p className="flex items-center gap-2 text-[15px] font-semibold text-slate-900"><Instagram size={17} aria-hidden /> Login dengan Instagram</p>
+              <p className="mt-1 text-[13px] text-slate-500">Profil, jumlah pengikut, dan postingan terbaru tampil otomatis di beranda web.</p>
+            </div>
+            {s.connected ? (
+              <>
+                <div className="flex items-center gap-3 rounded-xl bg-green-50 p-4 text-[14px] text-green-800">
+                  <Check size={18} aria-hidden />
+                  <span>Terhubung sebagai <b>@{s.username}</b>{s.connectedAt && ` sejak ${fmtDate(s.connectedAt).split(",")[0]}`}.</span>
+                </div>
+                {days != null && <p className="text-[13px] text-slate-500">Token berlaku {days} hari lagi dan diperpanjang otomatis tiap hari.</p>}
+                <div className="flex flex-wrap items-center gap-2">
+                  <a href="/" target="_blank" className="inline-flex h-9 items-center gap-1 px-1 text-[13px] font-medium text-primary hover:underline">Lihat beranda <ExternalLink size={13} aria-hidden /></a>
+                  <span className="flex-1" />
+                  <Button variant="outline" loading={connect.isPending} onClick={() => connect.mutate()}>Hubungkan ulang</Button>
+                  <Button variant="ghost" loading={disconnect.isPending} onClick={() => confirm("Putuskan Instagram? Bagian Instagram akan hilang dari beranda.") && disconnect.mutate()}>Putuskan</Button>
+                </div>
+              </>
+            ) : (
+              <div>
+                <Button disabled={!ready} loading={connect.isPending} onClick={() => connect.mutate()}><Instagram size={16} aria-hidden /> Login dengan Instagram</Button>
+                {!ready && <p className="mt-2 text-[13px] text-slate-500">Selesaikan langkah 2 dulu.</p>}
+              </div>
+            )}
+          </div>
+        </div>
       </Card>
     </div>
   );

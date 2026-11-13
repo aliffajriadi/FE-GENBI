@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, CalendarDays, MapPin, PenLine, ScanLine, Trophy, Wallet } from "lucide-react";
 import { ArticleCard, ArticleRow } from "@/components/site/article-card";
+import { InstagramSection, type InstagramFeed } from "@/components/site/instagram-section";
 import { getPublic, publicImg, type PublicArticle } from "@/components/site/public-api";
 import { fmtDay, SiteFooter, SiteHeader } from "@/components/site/site-shell";
 import { EVENT_TYPE_LABEL } from "@/lib/format";
@@ -19,7 +20,7 @@ const time = (s: string) => new Date(s).toLocaleTimeString("id-ID", { hour: "2-d
 const weekday = (s: string) => new Date(s).toLocaleDateString("id-ID", { weekday: "long", timeZone: TZ });
 
 export default async function Home() {
-  const [site, bi, stats, events, divisions, news, personal] = await Promise.all([
+  const [site, bi, stats, events, divisions, news, personal, instagram] = await Promise.all([
     getPublic<Site>("/public/site", { heroImage: null, headline: "Generasi Baru Indonesia" }, 30),
     getPublic<Indicators>("/public/bi-indicators", null, 1800),
     getPublic<Stats>("/public/stats", { period: null, members: 0, divisions: 0, events: 0 }),
@@ -27,6 +28,7 @@ export default async function Home() {
     getPublic<Div[]>("/public/divisions", []),
     getPublic<PublicArticle[]>("/public/articles?kind=NEWS&limit=4", []),
     getPublic<PublicArticle[]>("/public/articles?kind=PERSONAL&limit=4", []),
+    getPublic<InstagramFeed | null>("/public/instagram", null, 1800),
   ]);
   const heroImg = publicImg(site.heroImage);
   const next = events[0];
@@ -165,6 +167,9 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      {/* ───── Instagram (tampil bila akun sudah dihubungkan admin) ───── */}
+      {instagram && <InstagramSection feed={instagram} />}
 
       {/* ───── Divisi ───── */}
       {divisions.length > 0 && (
