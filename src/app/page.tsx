@@ -28,7 +28,7 @@ export default async function Home() {
     getPublic<Div[]>("/public/divisions", []),
     getPublic<PublicArticle[]>("/public/articles?kind=NEWS&limit=4", []),
     getPublic<PublicArticle[]>("/public/articles?kind=PERSONAL&limit=4", []),
-    getPublic<InstagramFeed | null>("/public/instagram", null, 1800),
+    getPublic<InstagramFeed | null>("/public/instagram", null, 300), // feed tersimpan di DB backend, diperbarui tiap 30 menit
   ]);
   const heroImg = publicImg(site.heroImage);
   const next = events[0];
