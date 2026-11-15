@@ -26,8 +26,7 @@ export function greeting() {
 export const toLocalInput = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 
 export const EVENT_TYPE_LABEL: Record<string, string> = {
-  RAPAT_PLENO: "Rapat pleno",
-  RAPAT_DIVISI: "Rapat divisi",
+  RAPAT: "Rapat",
   KEGIATAN: "Kegiatan",
   KEPANITIAAN: "Kepanitiaan",
 };

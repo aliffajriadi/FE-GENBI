@@ -44,7 +44,12 @@ export default function PlanningPage() {
   const divisions = useQuery({ queryKey: ["boards"], queryFn: () => api<{ id: string; name: string }[]>("/boards") });
   const [divisionId, setDivisionId] = useState("");
   useEffect(() => {
-    if (!divisionId && divisions.data?.length) setDivisionId(divisions.data.find((d) => d.id === me?.division?.id)?.id ?? divisions.data[0].id);
+    if (divisionId || !divisions.data?.length) return;
+    // Dari kalender: ?division=…&card=… langsung buka papan + kartunya.
+    const p = new URLSearchParams(location.search);
+    const want = divisions.data.find((d) => d.id === p.get("division")) ?? divisions.data.find((d) => d.id === me?.division?.id) ?? divisions.data[0];
+    setDivisionId(want.id);
+    if (want.id === p.get("division") && p.get("card")) setOpenId(p.get("card"));
   }, [divisions.data, divisionId, me?.division?.id]);
 
   const key = ["board", divisionId];

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, ArrowUpRight, CalendarCheck, CalendarX2, CheckSquare, Clock, Inbox, Landmark, MapPin, Radio, ScanLine, Trophy, Users, Wallet } from "lucide-react";
 import { AttendanceMix, AttendanceTrend, PointsGrowth, type TrendPoint } from "@/components/dashboard-charts";
+import { EventCalendar } from "@/components/event-calendar";
 import { Avatar, Badge, Button, Card, CardHeader, DateTile, EmptyState, PageHeader, Skeleton, StatCard } from "@/components/ui";
 import { api } from "@/lib/api";
 import { EVENT_TYPE_LABEL, fmtTime, greeting, rupiah } from "@/lib/format";
@@ -130,6 +131,11 @@ export default function DashboardPage() {
           </dl>
         </Card>
       )}
+
+      <section className="mt-6">
+        <h2 className="mb-2 px-1 text-xs font-semibold tracking-wide text-slate-500 uppercase">Kalender organisasi</h2>
+        <EventCalendar />
+      </section>
 
       <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Card className="self-start">

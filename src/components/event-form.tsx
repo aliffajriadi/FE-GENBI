@@ -60,10 +60,10 @@ export function EventForm({ event, onCreated, onCancel, extra }: { event?: Event
   return (
     <form id="event-form" onSubmit={onSubmit} className="grid gap-6">
       <section className="grid gap-4">
-        <Field label="Judul kegiatan"><Input name="title" required minLength={3} placeholder="Rapat pleno November" autoFocus defaultValue={event?.title} /></Field>
+        <Field label="Judul kegiatan"><Input name="title" required minLength={3} placeholder="Rapat bulanan November" autoFocus defaultValue={event?.title} /></Field>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Jenis">
-            <Select name="type" defaultValue={event?.type ?? (manageAll ? "RAPAT_PLENO" : "RAPAT_DIVISI")}>
+            <Select name="type" defaultValue={event?.type ?? "RAPAT"}>
               {Object.entries(EVENT_TYPE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </Select>
           </Field>
