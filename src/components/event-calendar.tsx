@@ -31,7 +31,7 @@ function monthGrid(m: Date) {
 type BoardData = {
   division: { id: string; name: string };
   columns: { id: string; name: string; isDone: boolean }[];
-  cards: { id: string; title: string; columnId: string; dueDate: string | null; assignee: { name: string } | null }[];
+  cards: { id: string; title: string; columnId: string; dueDate: string | null; assignees: { name: string }[] }[];
 };
 // Satu item kalender: kegiatan (punya rentang) atau tenggat kartu planning (satu hari).
 type CalItem = { id: string; title: string; dot: string; start: Date; end: Date; sub: string; event?: EventItem; href?: string; done?: boolean };
@@ -71,7 +71,7 @@ export function EventCalendar() {
       return {
         id: c.id, title: c.title, start: due, end: due, done,
         dot: done ? CARD_DOT.done : dayStart(due) < todayMs ? CARD_DOT.late : CARD_DOT.todo,
-        sub: `${col?.name ?? ""} · ${c.assignee?.name ?? "Belum ada PIC"}`,
+        sub: `${col?.name ?? ""} · ${c.assignees.map((a) => a.name).join(", ") || "Belum ada PIC"}`,
         href: `/dashboard/planning?division=${b.division.id}&card=${c.id}`,
       };
     });

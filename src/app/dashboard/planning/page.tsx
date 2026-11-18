@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, AlignLeft, SlidersHorizontal, ArrowLeft, ArrowRight, CalendarDays, Check, CheckSquare, ChevronLeft, ChevronRight, KanbanSquare, MoreHorizontal, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { AlertTriangle, AlignLeft, SlidersHorizontal, ArrowLeft, ArrowRight, CalendarDays, Check, CheckSquare, ChevronLeft, ChevronRight, Flag, KanbanSquare, MessageSquare, MoreHorizontal, Send, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Dialog } from "@/components/dialog";
 import { Menu, MenuItem } from "@/components/menu";
 import { useToast } from "@/components/toast";
@@ -14,9 +14,11 @@ type Column = { id: string; name: string; position: number; isDone: boolean };
 type ChecklistItem = { id: string; text: string; done: boolean };
 type Person = { id: string; name: string; avatarUrl: string | null };
 type Card = {
-  id: string; columnId: string; title: string; description: string | null; assigneeId: string | null; assignee: Person | null;
-  dueDate: string | null; checklist: ChecklistItem[] | null; position: number; createdById: string;
+  id: string; columnId: string; title: string; description: string | null; assignees: Person[];
+  dueDate: string | null; checklist: ChecklistItem[] | null; priority: Priority; position: number; createdById: string; _count?: { comments: number };
 };
+type Priority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
+type Comment = { id: string; body: string; createdAt: string; updatedAt: string; author: Person };
 type Board = { division: { id: string; name: string }; columns: Column[]; cards: Card[]; members: Person[]; canEdit: boolean; canManage: boolean };
 
 const dayFmt = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short" });
@@ -35,6 +37,13 @@ function dueText(iso: string) {
   if (days < 0) return `telat ${-days} hari`;
   return days <= 7 ? `${days} hari lagi` : dayFmt.format(new Date(iso));
 }
+const PRIORITY: Record<Priority, { label: string; cls: string }> = {
+  LOW: { label: "Rendah", cls: "bg-slate-100 text-slate-600" },
+  NORMAL: { label: "Normal", cls: "bg-slate-100 text-slate-600" },
+  HIGH: { label: "Tinggi", cls: "bg-amber-50 text-amber-700" },
+  URGENT: { label: "Mendesak", cls: "bg-red-50 text-red-700" },
+};
+const timeFmt = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 const isOverdue = (c: Card, done: boolean) => !!c.dueDate && !done && new Date(c.dueDate) < new Date(new Date().toDateString());
 
 export default function PlanningPage() {
@@ -106,7 +115,7 @@ export default function PlanningPage() {
   const b = board.data;
   const visible = (c: Card) =>
     (month === "all" || (month === "none" ? !c.dueDate : !!c.dueDate && monthKey(new Date(c.dueDate)) === month)) &&
-    (!pic || (pic === "me" ? c.assigneeId === me?.id : pic === "none" ? !c.assigneeId : c.assigneeId === pic)) &&
+    (!pic || (pic === "none" ? !c.assignees.length : c.assignees.some((a) => a.id === (pic === "me" ? me?.id : pic)))) &&
     (!q || c.title.toLowerCase().includes(q.toLowerCase()));
   const sorted = (colId: string) => (b?.cards ?? []).filter((c) => c.columnId === colId).sort((x, y) => x.position - y.position);
   const cardsOf = (colId: string) => sorted(colId).filter(visible);
@@ -217,7 +226,7 @@ export default function PlanningPage() {
         <div
           ref={boardRef}
           onScroll={(e) => { const el = e.currentTarget; const w = (el.children[0] as HTMLElement | undefined)?.offsetWidth ?? 1; setColIdx(Math.round(el.scrollLeft / (w + 12))); }}
-          className={cx("-mx-4 flex min-w-0 flex-1 snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-6 sm:mx-0 sm:scroll-px-0 sm:px-0 [scrollbar-width:thin]", openId && "lg:pr-[440px]")}>
+          className={cx("-mx-4 flex min-w-0 flex-1 snap-x scroll-px-4 gap-3 overflow-x-auto lg:gap-2 px-4 pb-6 sm:mx-0 sm:scroll-px-0 sm:px-0 [scrollbar-width:thin]", openId && "lg:pr-[440px]")}>
           {b.columns.map((col, ci) => (
             <ColumnView
               key={col.id}
@@ -239,8 +248,8 @@ export default function PlanningPage() {
             />
           ))}
           {b.canManage && (
-            <button onClick={() => setRenaming("new")} className="flex h-12 w-72 shrink-0 snap-start items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 text-[13px] font-medium text-slate-500 hover:border-slate-300 hover:text-slate-800">
-              <Plus size={16} aria-hidden /> Tambah kolom
+            <button onClick={() => setRenaming("new")} aria-label="Tambah kolom" title="Tambah kolom" className="flex h-12 w-72 shrink-0 snap-start items-center justify-center gap-2 rounded-xl border-2 border-dashed lg:w-11 border-slate-200 text-[13px] font-medium text-slate-500 hover:border-slate-300 hover:text-slate-800">
+              <Plus size={16} aria-hidden /> <span className="lg:hidden">Tambah kolom</span>
             </button>
           )}
         </div>
@@ -280,7 +289,7 @@ function ColumnView({ col, cards, board, isFirst, isLast, onOpen, onDrop, onRena
 
   return (
     <section
-      className={cx("flex max-h-[calc(100dvh-14rem)] w-[min(18rem,82vw)] shrink-0 snap-start flex-col rounded-xl bg-slate-100/80 transition-colors", over != null && "bg-blue-50 ring-2 ring-blue-200")}
+      className={cx("flex max-h-[calc(100dvh-14rem)] w-[min(18rem,82vw)] shrink-0 snap-start flex-col rounded-xl lg:w-auto lg:min-w-[150px] lg:flex-1 lg:basis-0 bg-slate-100/80 transition-colors", over != null && "bg-blue-50 ring-2 ring-blue-200")}
       onDragOver={(e) => { if (!board.canEdit) return; e.preventDefault(); setOver(indexAt(e.clientY)); }}
       onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(null); }}
       onDrop={(e) => { e.preventDefault(); const id = e.dataTransfer.getData("text/card"); const at = indexAt(e.clientY); setOver(null); if (id) onDrop(id, at); }}
@@ -342,33 +351,40 @@ function CardTile({ card, done, draggable, selected, onOpen }: { card: Card; don
       onDragStart={(e) => { e.dataTransfer.setData("text/card", card.id); e.dataTransfer.effectAllowed = "move"; }}
       onClick={onOpen}
       className={cx(
-        "group w-full cursor-pointer rounded-lg border bg-white p-3 text-left shadow-xs transition hover:-translate-y-px hover:shadow-md active:cursor-grabbing",
+        "group w-full cursor-pointer rounded-lg border bg-white p-2.5 text-left shadow-xs transition hover:-translate-y-px hover:shadow-md active:cursor-grabbing",
         late ? "border-red-200 border-l-[3px] border-l-red-500" : "border-slate-200/80 hover:border-slate-300",
         done && "bg-slate-50/80",
         selected && "ring-2 ring-primary ring-offset-1",
       )}
       aria-pressed={selected}
     >
-      <p className={cx("text-[13.5px] leading-snug font-medium text-slate-900", done && "text-slate-500 line-through decoration-slate-300")}>{card.title}</p>
+      {(card.priority === "HIGH" || card.priority === "URGENT") && (
+        <span className={cx("mb-1.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10.5px] font-semibold", PRIORITY[card.priority].cls)}><Flag size={10} aria-hidden />{PRIORITY[card.priority].label}</span>
+      )}
+      <div className="flex items-start gap-1.5">
+        <p className={cx("line-clamp-3 min-w-0 flex-1 text-[13px] leading-snug font-medium break-words text-slate-900", done && "text-slate-500 line-through decoration-slate-300")} title={card.title}>{card.title}</p>
+        {card.assignees.length
+          ? <span className="flex shrink-0 -space-x-1.5" title={`PIC: ${card.assignees.map((a) => a.name).join(", ")}`}>
+              {card.assignees.slice(0, 2).map((a) => <Avatar key={a.id} name={a.name} src={a.avatarUrl} size={20} className="ring-2 ring-white" />)}
+              {card.assignees.length > 2 && <span className="grid size-5 place-items-center rounded-full bg-slate-200 text-[9.5px] font-medium text-slate-600 ring-2 ring-white">+{card.assignees.length - 2}</span>}
+            </span>
+          : <span className="grid size-5 shrink-0 place-items-center rounded-full border border-dashed border-slate-300 text-[10px] text-slate-400" title="Belum ada PIC">?</span>}
+      </div>
       {list.length > 0 && (
         <div className="mt-2 flex items-center gap-2">
           <div className="h-1 flex-1 overflow-hidden rounded-full bg-slate-100"><div className={cx("h-full rounded-full", checked === list.length ? "bg-green-500" : "bg-primary/70")} style={{ width: `${(checked / list.length) * 100}%` }} /></div>
           <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 tabular-nums"><CheckSquare size={11} aria-hidden />{checked}/{list.length}</span>
         </div>
       )}
-      <div className="mt-2.5 flex items-center gap-1.5 text-[11.5px]">
+      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
         {card.dueDate ? (
           <span className={cx("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium",
             late ? "bg-red-50 text-red-700" : soon ? "bg-amber-50 text-amber-700" : done ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-600")}>
             {late ? <AlertTriangle size={11} aria-hidden /> : <CalendarDays size={11} aria-hidden />} {done ? dayFmt.format(new Date(card.dueDate)) : dueText(card.dueDate)}
           </span>
-        ) : <span className="text-slate-400">Tanpa tenggat</span>}
+        ) : <span className="text-slate-400">–</span>}
         {card.description && <AlignLeft size={13} className="text-slate-400" aria-label="Ada deskripsi" />}
-        <span className="ml-auto">
-          {card.assignee
-            ? <span title={`PIC: ${card.assignee.name}`}><Avatar name={card.assignee.name} src={card.assignee.avatarUrl} size={22} /></span>
-            : <span className="grid size-[22px] place-items-center rounded-full border border-dashed border-slate-300 text-[10px] text-slate-400" title="Belum ada PIC">?</span>}
-        </span>
+        {!!card._count?.comments && <span className="inline-flex items-center gap-0.5 text-slate-400" aria-label={`${card._count.comments} komentar`}><MessageSquare size={12} aria-hidden />{card._count.comments}</span>}
       </div>
     </button>
   );
@@ -429,12 +445,12 @@ function CardPanel({ card, board, divisionId, onClose }: { card: Card; board: Bo
 
   // Simpan otomatis per kolom isian; tampilan diperbarui duluan (optimistis).
   const patch = useMutation({
-    mutationFn: (body: Partial<Pick<Card, "title" | "description" | "assigneeId" | "dueDate" | "checklist">>) => api(`/board-cards/${card.id}`, { method: "PATCH", body }),
+    mutationFn: (body: Partial<Pick<Card, "title" | "description" | "dueDate" | "checklist" | "priority">> & { assigneeIds?: string[] }) => api(`/board-cards/${card.id}`, { method: "PATCH", body }),
     onMutate: (body) => {
       setSaved("saving");
       qc.setQueryData<Board>(key, (b) => b && {
         ...b,
-        cards: b.cards.map((c) => (c.id === card.id ? { ...c, ...body, ...(body.assigneeId !== undefined ? { assignee: b.members.find((m) => m.id === body.assigneeId) ?? null } : {}) } : c)),
+        cards: b.cards.map((c) => (c.id === card.id ? { ...c, ...body, ...(body.assigneeIds ? { assignees: b.members.filter((m) => body.assigneeIds!.includes(m.id)) } : {}) } : c)),
       });
     },
     onSuccess: () => setSaved("saved"),
@@ -495,11 +511,29 @@ function CardPanel({ card, board, divisionId, onClose }: { card: Card; board: Bo
               </Select>
             </dd>
             <dt className="text-slate-500">PIC</dt>
-            <dd className="flex items-center gap-2">
-              {card.assignee && <Avatar name={card.assignee.name} src={card.assignee.avatarUrl} size={24} />}
-              <Select value={card.assigneeId ?? ""} onChange={(e) => patch.mutate({ assigneeId: e.target.value || null })} aria-label="PIC" className="h-8 flex-1">
-                <option value="">Belum ada</option>
-                {board.members.map((m) => <option key={m.id} value={m.id}>{m.name}{m.id === me?.id ? " (saya)" : ""}</option>)}
+            <dd className="flex flex-wrap gap-1.5" role="group" aria-label="PIC (bisa lebih dari satu)">
+              {/* Klik untuk menambah/melepas PIC; yang terpilih ditandai warna. */}
+              {board.members.map((m) => {
+                const on = card.assignees.some((a) => a.id === m.id);
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => patch.mutate({ assigneeIds: on ? card.assignees.filter((a) => a.id !== m.id).map((a) => a.id) : [...card.assignees.map((a) => a.id), m.id] })}
+                    className={cx("inline-flex items-center gap-1.5 rounded-full border py-0.5 pr-2.5 pl-0.5 text-xs transition disabled:opacity-60",
+                      on ? "border-primary bg-primary/10 font-medium text-slate-900" : "border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-800")}
+                  >
+                    <Avatar name={m.name} src={m.avatarUrl} size={20} />{m.name}{m.id === me?.id ? " (saya)" : ""}
+                  </button>
+                );
+              })}
+              {!board.members.length && <span className="text-xs text-slate-400">Belum ada anggota</span>}
+            </dd>
+            <dt className="text-slate-500">Prioritas</dt>
+            <dd>
+              <Select value={card.priority} onChange={(e) => patch.mutate({ priority: e.target.value as Priority })} aria-label="Prioritas" className="h-8">
+                {(Object.keys(PRIORITY) as Priority[]).map((p) => <option key={p} value={p}>{PRIORITY[p].label}</option>)}
               </Select>
             </dd>
             <dt className="text-slate-500">Tenggat</dt>
@@ -554,6 +588,7 @@ function CardPanel({ card, board, divisionId, onClose }: { card: Card; board: Bo
             )}
           </div>
         </fieldset>
+        <Comments cardId={card.id} divisionId={divisionId} canModerate={board.canManage} />
       </div>
       <footer className="border-t border-slate-100 px-4 py-2.5 text-xs text-slate-400">
         {ro ? "Hanya bisa dilihat" : "Perubahan tersimpan otomatis"}<span className="hidden lg:inline"> · Esc untuk menutup</span>
@@ -577,5 +612,88 @@ function ColumnDialog({ target, divisionId, onClose }: { target: Column | "new" 
         <ErrorText error={save.error} />
       </form>
     </Dialog>
+  );
+}
+
+// Diskusi di kartu. Semua yang bisa melihat papan boleh berkomentar; daftar ikut segar lewat event board:changed.
+function Comments({ cardId, divisionId, canModerate }: { cardId: string; divisionId: string; canModerate: boolean }) {
+  const { data: me } = useMe();
+  const qc = useQueryClient();
+  const toast = useToast();
+  const key = ["board", divisionId, "comments", cardId];
+  const list = useQuery({ queryKey: key, queryFn: () => api<Comment[]>(`/board-cards/${cardId}/comments`) });
+  const [text, setText] = useState("");
+  const [editing, setEditing] = useState<string | null>(null);
+  const refresh = () => qc.invalidateQueries({ queryKey: ["board", divisionId] });
+  const send = useMutation({
+    mutationFn: () => api(`/board-cards/${cardId}/comments`, { method: "POST", body: { body: text } }),
+    onSuccess: () => { setText(""); refresh(); },
+    onError: (e) => toast(e.message, { error: true }),
+  });
+  const edit = useMutation({
+    mutationFn: ({ id, body }: { id: string; body: string }) => api(`/board-comments/${id}`, { method: "PATCH", body: { body } }),
+    onSuccess: () => { setEditing(null); refresh(); },
+    onError: (e) => toast(e.message, { error: true }),
+  });
+  const del = useMutation({
+    mutationFn: (id: string) => api(`/board-comments/${id}`, { method: "DELETE" }),
+    onSuccess: refresh,
+    onError: (e) => toast(e.message, { error: true }),
+  });
+  const submit = () => text.trim() && !send.isPending && send.mutate();
+
+  return (
+    <section className="mt-6 border-t border-slate-100 pt-4" aria-label="Komentar">
+      <p className="mb-3 flex items-center gap-1.5 text-[13px] font-medium text-slate-700">
+        <MessageSquare size={14} aria-hidden /> Komentar <span className="text-xs font-normal text-slate-500 tabular-nums">{list.data?.length ?? ""}</span>
+      </p>
+      <ErrorText error={list.error} />
+      {list.isLoading && <Skeleton className="h-12 rounded-lg" />}
+      <ul className="grid gap-3">
+        {list.data?.map((c) => (
+          <li key={c.id} className="group flex gap-2.5">
+            <Avatar name={c.author.name} src={c.author.avatarUrl} size={28} />
+            <div className="min-w-0 flex-1">
+              <p className="flex items-baseline gap-2 text-xs">
+                <b className="font-medium text-slate-900">{c.author.name}</b>
+                <span className="text-slate-400">{timeFmt.format(new Date(c.createdAt))}{c.updatedAt !== c.createdAt && " · diedit"}</span>
+                <span className="ml-auto flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100">
+                  {c.author.id === me?.id && editing !== c.id && <button onClick={() => setEditing(c.id)} className="rounded p-0.5 text-slate-400 hover:text-slate-700" aria-label="Ubah komentar"><Pencil size={12} /></button>}
+                  {(c.author.id === me?.id || canModerate) && <button onClick={() => confirm("Hapus komentar ini?") && del.mutate(c.id)} className="rounded p-0.5 text-slate-400 hover:text-red-600" aria-label="Hapus komentar"><Trash2 size={12} /></button>}
+                </span>
+              </p>
+              {editing === c.id ? (
+                <Textarea
+                  autoFocus
+                  rows={2}
+                  defaultValue={c.body}
+                  maxLength={2000}
+                  aria-label="Ubah komentar"
+                  className="mt-1 text-[13px]"
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") { e.stopPropagation(); setEditing(null); }
+                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); const v = e.currentTarget.value.trim(); if (v && v !== c.body) edit.mutate({ id: c.id, body: v }); else setEditing(null); }
+                  }}
+                />
+              ) : <p className="mt-0.5 text-[13px] whitespace-pre-wrap break-words text-slate-700">{c.body}</p>}
+            </div>
+          </li>
+        ))}
+      </ul>
+      {list.data?.length === 0 && <p className="text-xs text-slate-400">Belum ada komentar.</p>}
+      <form className="mt-3 flex items-end gap-2" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+        <Textarea
+          rows={2}
+          value={text}
+          maxLength={2000}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
+          placeholder="Tulis komentar… (Enter kirim, Shift+Enter baris baru)"
+          aria-label="Komentar baru"
+          className="flex-1 text-[13px]"
+        />
+        <Button type="submit" size="sm" loading={send.isPending} disabled={!text.trim()} aria-label="Kirim komentar"><Send size={14} aria-hidden /></Button>
+      </form>
+    </section>
   );
 }
