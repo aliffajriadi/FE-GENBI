@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, AlignLeft, SlidersHorizontal, ArrowLeft, ArrowRight, CalendarDays, Check, CheckSquare, ChevronLeft, ChevronRight, Flag, KanbanSquare, MessageSquare, MoreHorizontal, Send, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { AlertTriangle, AlignLeft, SlidersHorizontal, ArrowLeft, ArrowRight, CalendarDays, Check, CheckSquare, ChevronLeft, ChevronRight, Flag, KanbanSquare, Maximize2, MessageSquare, MoreHorizontal, Send, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Dialog } from "@/components/dialog";
 import { Menu, MenuItem } from "@/components/menu";
 import { useToast } from "@/components/toast";
@@ -58,8 +58,17 @@ export default function PlanningPage() {
     const p = new URLSearchParams(location.search);
     const want = divisions.data.find((d) => d.id === p.get("division")) ?? divisions.data.find((d) => d.id === me?.division?.id) ?? divisions.data[0];
     setDivisionId(want.id);
-    if (want.id === p.get("division") && p.get("card")) setOpenId(p.get("card"));
+    if (want.id === p.get("division") && p.get("card")) { setOpenId(p.get("card")); setFullPage(p.get("view") === "page"); }
   }, [divisions.data, divisionId, me?.division?.id]);
+  // Halaman detail kartu = mode tampilan di URL (?view=page), jadi tombol Back browser & link bisa dipakai.
+  const [fullPage, setFullPage] = useState(false);
+  useEffect(() => {
+    const onPop = () => { const p = new URLSearchParams(location.search); setOpenId(p.get("card")); setFullPage(p.get("view") === "page"); };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+  const openPage = (id: string) => { history.pushState(null, "", `?division=${divisionId}&card=${id}&view=page`); setFullPage(true); };
+  const closePage = () => { history.pushState(null, "", `?division=${divisionId}`); setFullPage(false); setOpenId(null); };
 
   const key = ["board", divisionId];
   const board = useQuery({ queryKey: key, queryFn: () => api<Board>(`/boards/${divisionId}`), enabled: !!divisionId });
@@ -131,6 +140,9 @@ export default function PlanningPage() {
     const vis = full.filter(visible);
     return index < vis.length ? full.indexOf(vis[index]) : vis.length ? full.indexOf(vis[vis.length - 1]) + 1 : full.length;
   };
+
+  const openCard = b?.cards.find((c) => c.id === openId);
+  if (fullPage && b && openCard) return <CardPanel key={openCard.id} page card={openCard} board={b} divisionId={divisionId} onClose={closePage} />;
 
   if (divisions.data?.length === 0) return <EmptyState icon={KanbanSquare} title="Belum masuk divisi" desc="Papan planning tersedia untuk anggota yang sudah punya divisi." />;
 
@@ -255,7 +267,7 @@ export default function PlanningPage() {
         </div>
         {/* Detail kartu ala Jira: panel di samping papan (bukan modal); di HP tampil layar penuh. */}
         {openId && b.cards.some((c) => c.id === openId) && (
-          <CardPanel key={openId} card={b.cards.find((c) => c.id === openId)!} board={b} divisionId={divisionId} onClose={() => setOpenId(null)} />
+          <CardPanel key={openId} card={b.cards.find((c) => c.id === openId)!} board={b} divisionId={divisionId} onClose={() => setOpenId(null)} onExpand={() => openPage(openId)} />
         )}
       </div>
       )}
@@ -418,13 +430,15 @@ function QuickAdd({ columnId, divisionId, onDone }: { columnId: string; division
   );
 }
 
-function CardPanel({ card, board, divisionId, onClose }: { card: Card; board: Board; divisionId: string; onClose: () => void }) {
+// page = tampil sebagai halaman penuh (lebih lebar, komentar di kolom kanan); tanpa page = panel samping.
+function CardPanel({ card, board, divisionId, onClose, onExpand, page }: { card: Card; board: Board; divisionId: string; onClose: () => void; onExpand?: () => void; page?: boolean }) {
   const { data: me } = useMe();
   const qc = useQueryClient();
   const toast = useToast();
   const key = ["board", divisionId];
   const [saved, setSaved] = useState<"idle" | "saving" | "saved">("idle");
   const [newItem, setNewItem] = useState("");
+  const [editDesc, setEditDesc] = useState(false);
   const ro = !board.canEdit;
   const col = board.columns.find((c) => c.id === card.columnId);
   const colIndex = board.columns.findIndex((c) => c.id === card.columnId);
@@ -471,12 +485,68 @@ function CardPanel({ card, board, divisionId, onClose }: { card: Card; board: Bo
   const canDelete = card.createdById === me?.id || board.canManage;
   const late = isOverdue(card, !!col?.isDone);
 
+  // Detail (status, PIC, prioritas, tenggat): di panel ikut alur, di halaman jadi kolom kanan ala Jira.
+  const meta = (
+    <dl className="grid grid-cols-[110px_minmax(0,1fr)] items-center gap-x-3 gap-y-2.5 text-[13px]">
+      <dt className="text-slate-500">Status</dt>
+      <dd>
+        <Select value={card.columnId} onChange={(e) => move.mutate(e.target.value)} aria-label="Pindah ke kolom" className="h-8">
+          {board.columns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </Select>
+      </dd>
+      <dt className="text-slate-500">PIC</dt>
+      <dd className="flex flex-wrap gap-1.5" role="group" aria-label="PIC (bisa lebih dari satu)">
+        {/* Klik untuk menambah/melepas PIC; yang terpilih ditandai warna. */}
+        {board.members.map((m) => {
+          const on = card.assignees.some((a) => a.id === m.id);
+          return (
+            <button
+              key={m.id}
+              type="button"
+              aria-pressed={on}
+              onClick={() => patch.mutate({ assigneeIds: on ? card.assignees.filter((a) => a.id !== m.id).map((a) => a.id) : [...card.assignees.map((a) => a.id), m.id] })}
+              className={cx("inline-flex items-center gap-1.5 rounded-full border py-0.5 pr-2.5 pl-0.5 text-xs transition disabled:opacity-60",
+                on ? "border-primary bg-primary/10 font-medium text-slate-900" : "border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-800")}
+            >
+              <Avatar name={m.name} src={m.avatarUrl} size={20} />{m.name}{m.id === me?.id ? " (saya)" : ""}
+            </button>
+          );
+        })}
+        {!board.members.length && <span className="text-xs text-slate-400">Belum ada anggota</span>}
+      </dd>
+      <dt className="text-slate-500">Prioritas</dt>
+      <dd>
+        <Select value={card.priority} onChange={(e) => patch.mutate({ priority: e.target.value as Priority })} aria-label="Prioritas" className="h-8">
+          {(Object.keys(PRIORITY) as Priority[]).map((p) => <option key={p} value={p}>{PRIORITY[p].label}</option>)}
+        </Select>
+      </dd>
+      <dt className="text-slate-500">Tenggat</dt>
+      <dd className="flex items-center gap-2">
+        <Input
+          type="date"
+          aria-label="Tenggat"
+          className="h-8 flex-1"
+          defaultValue={card.dueDate ? card.dueDate.slice(0, 10) : ""}
+          onChange={(e) => patch.mutate({ dueDate: e.target.value ? new Date(`${e.target.value}T23:59:00`).toISOString() : null })}
+        />
+        {card.dueDate && <span className={cx("shrink-0 text-xs", late ? "font-medium text-red-600" : "text-slate-500")}>{col?.isDone ? "selesai" : dueText(card.dueDate)}</span>}
+      </dd>
+    </dl>
+  );
+
   return (
     <aside
-      className="fixed inset-0 z-40 flex animate-[panel-in_220ms_var(--ease)] flex-col bg-white lg:left-auto lg:w-[420px] lg:border-l lg:border-slate-200 lg:shadow-[-12px_0_32px_-12px_rgb(15_23_42/0.18)]"
+      className={page
+        ? "mx-auto flex max-w-6xl flex-col rounded-xl border border-slate-200/80 bg-white shadow-xs"
+        : "fixed inset-0 z-40 flex animate-[panel-in_220ms_var(--ease)] flex-col bg-white lg:left-auto lg:w-[420px] lg:border-l lg:border-slate-200 lg:shadow-[-12px_0_32px_-12px_rgb(15_23_42/0.18)]"}
       aria-label={`Detail kartu ${card.title}`}
     >
       <header className="flex items-center gap-2 border-b border-slate-100 px-4 py-3">
+        {page && (
+          <button onClick={onClose} className="-ml-1 inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[13px] text-slate-500 hover:bg-slate-100 hover:text-slate-800">
+            <ArrowLeft size={15} aria-hidden /> {board.division.name}
+          </button>
+        )}
         <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
           <span className={cx("size-2 rounded-full", col ? accentOf(col, colIndex) : "bg-slate-400")} aria-hidden />{col?.name}
         </span>
@@ -487,12 +557,20 @@ function CardPanel({ card, board, divisionId, onClose }: { card: Card; board: Bo
               <MenuItem icon={Trash2} danger onClick={() => confirm("Hapus kartu ini?") && del.mutate()}>Hapus kartu</MenuItem>
             </Menu>
           )}
-          <button onClick={onClose} className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup detail"><X size={18} /></button>
+          {onExpand && <button onClick={onExpand} className="hidden rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 lg:block" aria-label="Buka sebagai halaman" title="Buka sebagai halaman"><Maximize2 size={16} /></button>}
+          {!page && <button onClick={onClose} className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup detail"><X size={18} /></button>}
         </span>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        <fieldset disabled={ro} className="grid gap-5">
+      <div className={page ? "grid gap-8 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px]" : "flex-1 overflow-y-auto px-4 py-4"}>
+        {page && (
+          <fieldset disabled={ro} className="h-fit rounded-lg border border-slate-200 p-4 lg:sticky lg:top-4 lg:order-last">
+            <p className="mb-3 text-[13px] font-medium text-slate-700">Detail</p>
+            {meta}
+          </fieldset>
+        )}
+        <div>
+        <fieldset disabled={ro} className="grid content-start gap-5">
           <textarea
             defaultValue={card.title}
             rows={1}
@@ -503,61 +581,31 @@ function CardPanel({ card, board, divisionId, onClose }: { card: Card; board: Bo
             className="field-sizing-content -mx-1 w-full resize-none rounded-md border border-transparent px-1 py-0.5 text-lg leading-snug font-semibold text-slate-900 outline-none hover:border-slate-200 focus:border-primary"
           />
 
-          <dl className="grid grid-cols-[110px_minmax(0,1fr)] items-center gap-x-3 gap-y-2.5 text-[13px]">
-            <dt className="text-slate-500">Status</dt>
-            <dd>
-              <Select value={card.columnId} onChange={(e) => move.mutate(e.target.value)} aria-label="Pindah ke kolom" className="h-8">
-                {board.columns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </Select>
-            </dd>
-            <dt className="text-slate-500">PIC</dt>
-            <dd className="flex flex-wrap gap-1.5" role="group" aria-label="PIC (bisa lebih dari satu)">
-              {/* Klik untuk menambah/melepas PIC; yang terpilih ditandai warna. */}
-              {board.members.map((m) => {
-                const on = card.assignees.some((a) => a.id === m.id);
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => patch.mutate({ assigneeIds: on ? card.assignees.filter((a) => a.id !== m.id).map((a) => a.id) : [...card.assignees.map((a) => a.id), m.id] })}
-                    className={cx("inline-flex items-center gap-1.5 rounded-full border py-0.5 pr-2.5 pl-0.5 text-xs transition disabled:opacity-60",
-                      on ? "border-primary bg-primary/10 font-medium text-slate-900" : "border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-800")}
-                  >
-                    <Avatar name={m.name} src={m.avatarUrl} size={20} />{m.name}{m.id === me?.id ? " (saya)" : ""}
-                  </button>
-                );
-              })}
-              {!board.members.length && <span className="text-xs text-slate-400">Belum ada anggota</span>}
-            </dd>
-            <dt className="text-slate-500">Prioritas</dt>
-            <dd>
-              <Select value={card.priority} onChange={(e) => patch.mutate({ priority: e.target.value as Priority })} aria-label="Prioritas" className="h-8">
-                {(Object.keys(PRIORITY) as Priority[]).map((p) => <option key={p} value={p}>{PRIORITY[p].label}</option>)}
-              </Select>
-            </dd>
-            <dt className="text-slate-500">Tenggat</dt>
-            <dd className="flex items-center gap-2">
-              <Input
-                type="date"
-                aria-label="Tenggat"
-                className="h-8 flex-1"
-                defaultValue={card.dueDate ? card.dueDate.slice(0, 10) : ""}
-                onChange={(e) => patch.mutate({ dueDate: e.target.value ? new Date(`${e.target.value}T23:59:00`).toISOString() : null })}
-              />
-              {card.dueDate && <span className={cx("shrink-0 text-xs", late ? "font-medium text-red-600" : "text-slate-500")}>{col?.isDone ? "selesai" : dueText(card.dueDate)}</span>}
-            </dd>
-          </dl>
+          {!page && meta}
 
           <div>
             <p className="mb-1.5 text-[13px] font-medium text-slate-700">Deskripsi</p>
-            <Textarea
-              defaultValue={card.description ?? ""}
-              rows={5}
-              placeholder="Tambahkan detail, link referensi, catatan…"
-              onBlur={(e) => { const v = e.target.value; if (v !== (card.description ?? "")) patch.mutate({ description: v || null }); }}
-              className="text-[13.5px]"
-            />
+            {page && !editDesc ? (
+              // Halaman: deskripsi tampil utuh tanpa kotak; klik untuk mengedit.
+              <div
+                role={ro ? undefined : "button"}
+                tabIndex={ro ? undefined : 0}
+                onClick={() => !ro && setEditDesc(true)}
+                onKeyDown={(e) => !ro && e.key === "Enter" && (e.preventDefault(), setEditDesc(true))}
+                className={cx("-mx-2 rounded-md px-2 py-1.5 text-[14px] leading-relaxed whitespace-pre-wrap break-words", !ro && "cursor-text hover:bg-slate-50", !card.description && "text-slate-400")}
+              >
+                {card.description || (ro ? "Tidak ada deskripsi" : "Klik untuk menambahkan deskripsi…")}
+              </div>
+            ) : (
+              <Textarea
+                defaultValue={card.description ?? ""}
+                rows={5}
+                autoFocus={page}
+                placeholder="Tambahkan detail, link referensi, catatan…"
+                onBlur={(e) => { const v = e.target.value; if (v !== (card.description ?? "")) patch.mutate({ description: v || null }); setEditDesc(false); }}
+                className={cx("text-[13.5px]", page && "field-sizing-content min-h-40 text-[14px] leading-relaxed")}
+              />
+            )}
           </div>
 
           <div>
@@ -589,9 +637,10 @@ function CardPanel({ card, board, divisionId, onClose }: { card: Card; board: Bo
           </div>
         </fieldset>
         <Comments cardId={card.id} divisionId={divisionId} canModerate={board.canManage} />
+        </div>
       </div>
       <footer className="border-t border-slate-100 px-4 py-2.5 text-xs text-slate-400">
-        {ro ? "Hanya bisa dilihat" : "Perubahan tersimpan otomatis"}<span className="hidden lg:inline"> · Esc untuk menutup</span>
+        {ro ? "Hanya bisa dilihat" : "Perubahan tersimpan otomatis"}<span className="hidden lg:inline"> · Esc untuk {page ? "kembali ke papan" : "menutup"}</span>
       </footer>
     </aside>
   );
