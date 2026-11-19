@@ -8,6 +8,8 @@ import {
   ClipboardList,
   History,
   KanbanSquare,
+  Link2,
+  ListChecks,
   LayoutDashboard,
   ScanLine,
   Settings,
@@ -49,6 +51,8 @@ export const NAV: { section: string; items: NavItem[] }[] = [
       { href: "/dashboard/finance", label: "Uang kas", icon: Wallet },
       { href: "/dashboard/articles", label: "Artikel", icon: Newspaper, show: (m) => has(m, "article.write") },
       { href: "/dashboard/admin", label: "Administrasi", icon: FolderOpen },
+      { href: "/dashboard/links", label: "Shortlink", icon: Link2 },
+      { href: "/dashboard/forms", label: "Form", icon: ListChecks, show: (m) => has(m, "event.create", "admin.manage") },
     ],
   },
   {

@@ -27,7 +27,10 @@ export default function LoginPage() {
     setError(null);
     try {
       await login(String(f.get("email")), String(f.get("password")));
-      router.replace("/dashboard");
+      // Dari form khusus anggota (/f/…): kembali ke form setelah login.
+      let next: string | null = null;
+      try { next = sessionStorage.getItem("next"); sessionStorage.removeItem("next"); } catch {}
+      router.replace(next?.startsWith("/f/") ? next : "/dashboard");
     } catch (err) {
       setError(err);
       setLoading(false);
