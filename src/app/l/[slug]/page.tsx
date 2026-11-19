@@ -1,22 +1,29 @@
 import type { Metadata } from "next";
 import { ArrowRight, Globe } from "lucide-react";
+import { API } from "@/components/site/public-api";
 import { Redirect } from "./redirect";
 
 // Shortlink: /l/<slug> → halaman "sedang mengalihkan" bermerek, lalu pindah ke tujuan. Data & hitung klik di backend.
-const BACKEND = process.env.BACKEND_URL || "http://localhost:4000";
+// Alamat API sama dengan halaman publik lain (API_URL_INTERNAL / NEXT_PUBLIC_API_URL / BACKEND_URL).
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Mengalihkan… · MyGenBI", robots: { index: false, follow: false } };
 
-async function resolve(slug: string) {
-  const res = await fetch(`${BACKEND}/api/v1/public/links/${encodeURIComponent(slug)}`, { cache: "no-store" }).catch(() => null);
-  const data: { url?: unknown; title?: unknown } | null = res?.ok ? (await res.json()).data : null;
+// null = link memang tidak ada/nonaktif (404); "error" = backend tidak terjangkau atau gagal.
+async function resolve(slug: string): Promise<{ url: string; title: string } | null | "error"> {
+  const res = await fetch(`${API}/public/links/${encodeURIComponent(slug)}`, { cache: "no-store" }).catch((e) => { console.error("[shortlink] API tidak terjangkau:", API, e); return null; });
+  if (!res) return "error";
+  if (res.status === 404) return null;
+  if (!res.ok) { console.error("[shortlink] API error", res.status, API); return "error"; }
+  const data: { url?: unknown; title?: unknown } = (await res.json()).data ?? {};
   // Backend sudah memvalidasi http(s); cek ulang supaya tidak pernah mengalihkan ke skema lain.
-  return typeof data?.url === "string" && /^https?:\/\//i.test(data.url) ? { url: data.url, title: String(data.title ?? "") } : null;
+  return typeof data.url === "string" && /^https?:\/\//i.test(data.url) ? { url: data.url, title: String(data.title ?? "") } : null;
 }
 
 export default async function ShortLinkPage({ params }: { params: Promise<{ slug: string }> }) {
-  const link = await resolve((await params).slug);
+  const found = await resolve((await params).slug);
+  const failed = found === "error";
+  const link = failed ? null : found;
   const host = link ? new URL(link.url).hostname.replace(/^www\./, "") : "";
   return (
     <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-[radial-gradient(120%_90%_at_50%_0%,#1d5bb8_0%,#11418b_45%,#081f45_100%)] px-4 text-white">
@@ -60,8 +67,8 @@ export default async function ShortLinkPage({ params }: { params: Promise<{ slug
           </>
         ) : (
           <>
-            <h1 className="mt-8 text-xl font-semibold">Link tidak ditemukan</h1>
-            <p className="mx-auto mt-2 max-w-xs text-[13.5px] text-white/70">Link ini salah ketik, sudah dihapus, atau sudah dinonaktifkan pengurus.</p>
+            <h1 className="mt-8 text-xl font-semibold">{failed ? "Server sedang bermasalah" : "Link tidak ditemukan"}</h1>
+            <p className="mx-auto mt-2 max-w-xs text-[13.5px] text-white/70">{failed ? "Coba muat ulang halaman ini beberapa saat lagi." : "Link ini salah ketik, sudah dihapus, atau sudah dinonaktifkan pengurus."}</p>
             <a href="/" className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-primary transition hover:bg-white/90">
               Ke beranda MyGenBI <ArrowRight size={14} aria-hidden />
             </a>

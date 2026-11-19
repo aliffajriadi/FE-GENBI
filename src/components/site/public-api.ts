@@ -1,7 +1,7 @@
 // Fetch data publik dari server Next (SSR + cache). API mati → fallback supaya halaman tetap tampil.
 // Server Next memanggil backend langsung; gambar /storage untuk browser tetap relatif (lewat proxy) kecuali NEXT_PUBLIC_API_URL diisi.
 const PUB = process.env.NEXT_PUBLIC_API_URL;
-const API = process.env.API_URL_INTERNAL || PUB || `${process.env.BACKEND_URL || "http://localhost:4000"}/api/v1`;
+export const API = process.env.API_URL_INTERNAL || PUB || `${process.env.BACKEND_URL || "http://localhost:4000"}/api/v1`;
 export const API_ORIGIN = PUB ? new URL(PUB).origin : "";
 export const publicImg = (url: string | null) => (url ? (url.startsWith("/storage/") ? API_ORIGIN + url : url) : null);
 
