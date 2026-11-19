@@ -545,3 +545,7 @@ dialog[open]::backdrop { background: rgb(15 23 42 / 0.4); backdrop-filter: blur(
 @keyframes link-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes link-ring { 0% { transform: scale(0.9); opacity: 0.55; } 100% { transform: scale(1.9); opacity: 0; } }
 @keyframes link-float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(18px, -14px); } }
+
+/* Halaman slot (/s/<slug>) */
+@keyframes slot-pop { 0% { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes slot-ping { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(2.2); opacity: 0; } }

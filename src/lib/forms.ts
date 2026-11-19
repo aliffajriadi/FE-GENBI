@@ -28,3 +28,4 @@ export function download(name: string, text: string) {
   URL.revokeObjectURL(a.href);
 }
 export const answerText = (a: Answer | undefined) => (Array.isArray(a) ? a.join(", ") : (a ?? ""));
+

@@ -10,6 +10,7 @@ import {
   KanbanSquare,
   Link2,
   ListChecks,
+  LayoutGrid,
   LayoutDashboard,
   ScanLine,
   Settings,
@@ -53,6 +54,7 @@ export const NAV: { section: string; items: NavItem[] }[] = [
       { href: "/dashboard/admin", label: "Administrasi", icon: FolderOpen },
       { href: "/dashboard/links", label: "Shortlink", icon: Link2 },
       { href: "/dashboard/forms", label: "Form", icon: ListChecks, show: (m) => has(m, "event.create", "admin.manage") },
+      { href: "/dashboard/slots", label: "Slot kelompok", icon: LayoutGrid, show: (m) => has(m, "event.create", "admin.manage") },
     ],
   },
   {

@@ -27,10 +27,10 @@ export default function LoginPage() {
     setError(null);
     try {
       await login(String(f.get("email")), String(f.get("password")));
-      // Dari form khusus anggota (/f/…): kembali ke form setelah login.
+      // Dari form anggota (/f/…) atau slot kelompok (/s/…): kembali ke sana setelah login.
       let next: string | null = null;
       try { next = sessionStorage.getItem("next"); sessionStorage.removeItem("next"); } catch {}
-      router.replace(next?.startsWith("/f/") ? next : "/dashboard");
+      router.replace(next && /^\/(f|s)\//.test(next) ? next : "/dashboard");
     } catch (err) {
       setError(err);
       setLoading(false);

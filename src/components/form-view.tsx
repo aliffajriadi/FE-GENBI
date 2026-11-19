@@ -82,9 +82,9 @@ export function FormShell({ form, meta, children, preview }: { form: ShellForm; 
 }
 
 // Daftar pertanyaan + tombol kirim. Tanpa onSubmit = mode pratinjau (tidak mengirim apa pun).
-export function QuestionList({ questions, answers, onAnswer, missing, onSubmit, onReset, pending, error, minimal }: {
+export function QuestionList({ questions, answers, onAnswer, missing, onSubmit, onReset, pending, error, minimal, submitLabel = "Kirim" }: {
   questions: Question[]; answers: Record<string, Answer>; onAnswer: (id: string, v: Answer) => void; missing?: string | null;
-  onSubmit?: (e: React.FormEvent) => void; onReset?: () => void; pending?: boolean; error?: React.ReactNode; minimal: boolean;
+  onSubmit?: (e: React.FormEvent) => void; onReset?: () => void; pending?: boolean; error?: React.ReactNode; minimal: boolean; submitLabel?: string;
 }) {
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit?.(e); }} className={cx("grid", minimal ? "gap-9" : "gap-3")} noValidate>
@@ -104,7 +104,7 @@ export function QuestionList({ questions, answers, onAnswer, missing, onSubmit, 
       <div className="flex items-center justify-between gap-3 pt-1">
         <button type="submit" disabled={pending}
           className="inline-flex h-11 items-center gap-2 rounded-[var(--f-r)] bg-[var(--f-accent)] px-7 text-[15px] font-semibold text-[var(--f-on-accent)] shadow-sm transition hover:brightness-110 disabled:opacity-60">
-          {pending ? "Mengirim…" : "Kirim"}
+          {pending ? "Mengirim…" : submitLabel}
         </button>
         {onReset && <button type="button" onClick={onReset} className="text-[13px] text-[var(--f-muted)] hover:text-[var(--f-card-fg)]">Kosongkan form</button>}
       </div>
@@ -166,3 +166,4 @@ export function FormNotice({ icon, title, desc, action, minimal }: { icon?: Reac
     </div>
   );
 }
+

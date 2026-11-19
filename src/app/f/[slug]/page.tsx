@@ -25,11 +25,8 @@ export default function FillFormPage() {
   const f = form.data;
 
   if (form.isLoading) return <main className="mx-auto max-w-2xl px-4 pt-10"><Skeleton className="h-64 rounded-xl" /></main>;
-  if (!f) {
-    return (
-      <FormShell form={{ title: "Form tidak ditemukan", description: "Link salah ketik atau form sudah dihapus.", theme: null }}><span /></FormShell>
-    );
-  }
+  if (!f) return <FormShell form={{ title: "Form tidak ditemukan", description: "Link salah ketik atau form sudah dihapus.", theme: null }}><span /></FormShell>;
+
   const minimal = (f.theme ?? DEFAULT_THEME).style === "minimal";
   const answer = (id: string, v: Answer) => { setAnswers((a) => ({ ...a, [id]: v })); if (missing === id) setMissing(null); };
   const submit = () => {
