@@ -1,37 +1,27 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, CalendarDays, MapPin, PenLine, ScanLine, Trophy, Wallet } from "lucide-react";
+import { ArrowRight, ArrowUpRight, PenLine, ScanLine, Trophy, Wallet } from "lucide-react";
 import { ArticleCard, ArticleRow } from "@/components/site/article-card";
 import { InstagramSection, type InstagramFeed } from "@/components/site/instagram-section";
 import { getPublic, publicImg, type PublicArticle } from "@/components/site/public-api";
 import { fmtDay, SiteFooter, SiteHeader } from "@/components/site/site-shell";
-import { EVENT_TYPE_LABEL } from "@/lib/format";
 
 // Landing page publik (SSR + cache 5 menit).
 type Stats = { period: string | null; members: number; divisions: number; events: number };
-type PublicEvent = { id: string; title: string; type: string; startAt: string; endAt: string; location: string | null };
 type Div = { id: string; name: string; description: string | null };
 type Site = { heroImage: string | null; heroAlt?: string; headline: string; subheadline?: string };
 type Indicators = { updatedAt: string; source: string; items: { key: string; label: string; value: string; period: string | null }[] } | null;
 
-const TZ = "Asia/Jakarta";
-const day = (s: string) => new Date(s).toLocaleDateString("id-ID", { day: "numeric", timeZone: TZ });
-const mon = (s: string) => new Date(s).toLocaleDateString("id-ID", { month: "short", timeZone: TZ });
-const time = (s: string) => new Date(s).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
-const weekday = (s: string) => new Date(s).toLocaleDateString("id-ID", { weekday: "long", timeZone: TZ });
-
 export default async function Home() {
-  const [site, bi, stats, events, divisions, news, personal, instagram] = await Promise.all([
+  const [site, bi, stats, divisions, news, personal, instagram] = await Promise.all([
     getPublic<Site>("/public/site", { heroImage: null, headline: "Generasi Baru Indonesia" }, 30),
     getPublic<Indicators>("/public/bi-indicators", null, 1800),
     getPublic<Stats>("/public/stats", { period: null, members: 0, divisions: 0, events: 0 }),
-    getPublic<PublicEvent[]>("/public/events", []),
     getPublic<Div[]>("/public/divisions", []),
     getPublic<PublicArticle[]>("/public/articles?kind=NEWS&limit=4", []),
     getPublic<PublicArticle[]>("/public/articles?kind=PERSONAL&limit=4", []),
     getPublic<InstagramFeed | null>("/public/instagram", null, 300), // feed tersimpan di DB backend, diperbarui tiap 30 menit
   ]);
   const heroImg = publicImg(site.heroImage);
-  const next = events[0];
 
   return (
     <div className="theme-light bg-white text-slate-900">
@@ -53,9 +43,6 @@ export default async function Home() {
               <Link href="/kabar" className="inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 text-[15px] font-medium text-slate-900 transition-colors hover:bg-slate-100">
                 Baca kabar terbaru <ArrowRight size={16} aria-hidden />
               </Link>
-              <Link href="/#agenda" className="inline-flex h-12 items-center rounded-full border border-white/50 px-6 text-[15px] font-medium text-white transition-colors hover:bg-white/10">
-                Lihat agenda
-              </Link>
             </div>
           </div>
         </div>
@@ -73,15 +60,6 @@ export default async function Home() {
                 <p className="mt-2 text-[14px] text-slate-600">{s.k}</p>
               </div>
             ))}
-            {next ? (
-              <Link href="/#agenda" className="group col-span-3 flex items-start gap-4 lg:col-span-1 lg:justify-self-end">
-                <CalendarDays size={20} className="mt-1 shrink-0 text-primary" aria-hidden />
-                <span>
-                  <span className="block text-[13px] text-slate-500">Agenda berikutnya · {weekday(next.startAt)}, {day(next.startAt)} {mon(next.startAt)}</span>
-                  <span className="mt-1 block max-w-xs text-[17px] leading-snug font-semibold text-slate-900 group-hover:text-primary">{next.title}</span>
-                </span>
-              </Link>
-            ) : null}
           </div>
         </div>
       </section>
@@ -123,40 +101,6 @@ export default async function Home() {
           </div>
         </section>
       )}
-
-      {/* ───── Agenda ───── */}
-      <section id="agenda" className="scroll-mt-20 border-y border-slate-200/70 bg-[#faf9f7]">
-        <div className="mx-auto grid max-w-6xl gap-12 px-5 py-20 sm:px-6 sm:py-24 lg:grid-cols-[1fr_1.6fr]">
-          <div>
-            <h2 className="font-serif text-[38px] leading-[1.1] font-medium tracking-[-0.02em] sm:text-[44px]">Agenda</h2>
-            <p className="mt-4 max-w-sm text-[16px] leading-relaxed text-slate-600">Kegiatan terbuka yang dijadwalkan pengurus. Anggota mendapat pengingat dan absen cukup dengan scan QR.</p>
-          </div>
-          {events.length === 0 ? (
-            <div className="grid place-items-center rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-              <p className="font-serif text-[20px] text-slate-500">Belum ada agenda terbuka dalam waktu dekat.</p>
-            </div>
-          ) : (
-            <ol className="divide-y divide-slate-200/80 rounded-2xl bg-white ring-1 ring-slate-200/80">
-              {events.map((e) => (
-                <li key={e.id} className="flex items-center gap-5 p-5 sm:p-6">
-                  <div className="w-14 shrink-0 text-center">
-                    <p className="font-serif text-[34px] leading-none font-medium">{day(e.startAt)}</p>
-                    <p className="mt-1 text-[12px] font-medium tracking-wide text-slate-500 uppercase">{mon(e.startAt)}</p>
-                  </div>
-                  <div className="min-w-0 flex-1 border-l border-slate-200 pl-5">
-                    <p className="text-[12px] font-medium text-primary">{EVENT_TYPE_LABEL[e.type]}</p>
-                    <p className="mt-0.5 text-[17px] font-semibold text-slate-900">{e.title}</p>
-                    <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[14px] text-slate-500">
-                      <span>{weekday(e.startAt)}, {time(e.startAt)} WIB</span>
-                      {e.location && <span className="flex items-center gap-1"><MapPin size={13} aria-hidden /> {e.location}</span>}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
-      </section>
 
       {/* ───── Artikel anggota ───── */}
       {personal.length > 0 && (

@@ -5,7 +5,6 @@ import { ScrollHeader } from "./scroll-header";
 
 const NAV = [
   { href: "/kabar", label: "Kabar" },
-  { href: "/#agenda", label: "Agenda" },
   { href: "/artikel", label: "Artikel" },
   { href: "/anggota", label: "Anggota" },
 ];
@@ -73,7 +72,6 @@ export function SiteFooter() {
           <ul className="mt-3 grid gap-2 text-[14px] text-slate-500">
             <li><Link href="/kabar" className="hover:text-slate-900">Kabar GenBI</Link></li>
             <li><Link href="/artikel" className="hover:text-slate-900">Artikel Anggota</Link></li>
-            <li><Link href="/#agenda" className="hover:text-slate-900">Agenda</Link></li>
             <li><Link href="/anggota" className="hover:text-slate-900">Anggota</Link></li>
           </ul>
         </div>

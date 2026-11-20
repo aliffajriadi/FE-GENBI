@@ -18,5 +18,5 @@ export function useKasLabel() {
 
 export type Cash = { id: string; type: "IN" | "OUT"; category: string; amount: number; date: string; description: string | null; attachmentUrl: string | null; refType: string | null };
 
-export type Plan = { id: string; name: string; amount: number; frequency: "MONTHLY" | "SEMESTER" | "ONCE"; dueDay: number | null; dueDate: string | null; scope: string; isActive: boolean; division: { name: string } | null; bills: { total: number; paid: number; pending: number; overdue: number } };
+export type Plan = { id: string; name: string; amount: number; frequency: "MONTHLY" | "SEMESTER" | "ONCE"; dueDay: number | null; dueDate: string | null; scope: string; isActive: boolean; division: { name: string } | null; _count: { members: number }; bills: { total: number; paid: number; pending: number; overdue: number } };
 export const FREQ = { MONTHLY: "Bulanan", SEMESTER: "Per semester", ONCE: "Sekali bayar" };

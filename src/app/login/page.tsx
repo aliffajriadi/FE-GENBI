@@ -2,9 +2,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, CalendarCheck, Eye, EyeOff, Lock, Mail, ScanLine, Trophy } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Button, ErrorText, Field, Input } from "@/components/ui";
-import { login } from "@/lib/api";
+import { api, login, publicFile } from "@/lib/api";
+import { LOGIN_SHADE, LoginCaption, type LoginPage } from "@/lib/login-page";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +14,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
   const [ready, setReady] = useState(false);
+  const page = useQuery({ queryKey: ["login-page"], queryFn: () => api<LoginPage>("/public/login-page"), staleTime: 5 * 60_000 });
+  const img = publicFile(page.data?.image);
 
   // Sebelum JS siap, form native bisa terkirim sebagai GET dan password masuk ke URL/riwayat browser.
   // Tombol dikunci sampai hydrate, dan URL yang terlanjur berisi kredensial dibersihkan.
@@ -65,29 +69,15 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-primary p-12 text-white lg:flex">
-        <p className="text-sm font-medium text-blue-200">MyGenBI</p>
-        <div>
-          <h2 className="max-w-md font-serif text-[38px] leading-[1.15] font-medium">Absensi rapat cukup scan QR. Poin keaktifan terhitung sendiri.</h2>
-          <ul className="mt-10 grid gap-5">
-            {[
-              { icon: ScanLine, t: "QR berganti tiap 20 detik", d: "Tidak bisa difoto lalu dikirim ke grup untuk titip absen." },
-              { icon: Trophy, t: "Poin tercatat per kejadian", d: "Hadir, telat, panitia, kontribusi: semua bisa ditelusuri asalnya." },
-              { icon: CalendarCheck, t: "Rekap otomatis", d: "Persentase kehadiran per anggota dan divisi, siap export Excel." },
-            ].map(({ icon: Icon, t, d }) => (
-              <li key={t} className="flex gap-4">
-                <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-white/10 ring-1 ring-white/15">
-                  <Icon size={18} aria-hidden />
-                </span>
-                <span>
-                  <span className="block font-medium">{t}</span>
-                  <span className="mt-0.5 block text-[13px] text-blue-200">{d}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <p className="text-xs text-blue-300">Generasi Baru Indonesia</p>
+      {/* Desktop: foto pilihan admin, digelapkan makin pekat ke bawah. Tanpa foto: panel biru polos. */}
+      <aside className="relative hidden overflow-hidden bg-primary lg:block">
+        {img && (
+          <>
+            <img src={img} alt={page.data?.alt ?? ""} className="absolute inset-0 h-full w-full object-cover" />
+            <div className={LOGIN_SHADE} aria-hidden />
+          </>
+        )}
+        {page.data && <LoginCaption title={page.data.title} caption={page.data.caption} />}
       </aside>
     </main>
   );

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { FilePick } from "@/components/file-pick";
 import { Dialog } from "@/components/dialog";
+import { ParticipantPicker } from "@/components/participant-picker";
 import { useToast } from "@/components/toast";
 import { Badge, Button, Card, CardHeader, cx, EmptyState, ErrorText, Field, Input, Select, Switch, Tabs } from "@/components/ui";
 import { api, uploadFile } from "@/lib/api";
@@ -60,7 +61,7 @@ export function Settings({ kas, label }: { kas: string; label: string }) {
               <div className="min-w-0 flex-1">
                 <p className="font-medium">{p.name} <span className="ml-1 text-[13px] font-normal text-slate-500">{rupiah(p.amount)} · {FREQ[p.frequency]}</span></p>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  {p.division ? `Divisi ${p.division.name}` : "Semua anggota"} · {p.bills.total} tagihan · {p.bills.paid} lunas · {p.bills.pending} menunggu{p.bills.overdue ? ` · ${p.bills.overdue} menunggak` : ""}
+                  {p.scope === "MANUAL" ? `${p._count.members} orang pilihan` : p.division ? `Divisi ${p.division.name}` : "Semua anggota"} · {p.bills.total} tagihan · {p.bills.paid} lunas · {p.bills.pending} menunggu{p.bills.overdue ? ` · ${p.bills.overdue} menunggak` : ""}
                 </p>
               </div>
               <Badge status={p.isActive ? "ACTIVE" : "INACTIVE"} />
@@ -96,14 +97,17 @@ function PlanDialog({ kas, open, onClose }: { kas: string; open: boolean; onClos
   const qc = useQueryClient();
   const toast = useToast();
   const [freq, setFreq] = useState<"MONTHLY" | "SEMESTER" | "ONCE">("MONTHLY");
-  const [scope, setScope] = useState<"ALL" | "DIVISION">("ALL");
-  const divisions = useQuery({ queryKey: ["divisions"], queryFn: () => api<Division[]>("/divisions"), enabled: open && kas === "org" });
+  const org = kas === "org";
+  const [scope, setScope] = useState<"ALL" | "DIVISION" | "MANUAL">(org ? "ALL" : "DIVISION");
+  const [picked, setPicked] = useState<string[]>([]);
+  useEffect(() => { if (open) { setScope(org ? "ALL" : "DIVISION"); setPicked([]); } }, [open, org]);
+  const divisions = useQuery({ queryKey: ["divisions"], queryFn: () => api<Division[]>("/divisions"), enabled: open && org });
   const save = useMutation({
     mutationFn: (f: Record<string, string>) =>
       api<{ generated: number }>(withKas("/dues-plans", kas), {
         method: "POST",
         body: {
-          name: f.name, amount: Number(f.amount), frequency: freq, scope, divisionId: scope === "DIVISION" ? f.divisionId : undefined,
+          name: f.name, amount: Number(f.amount), frequency: freq, scope, divisionId: scope === "DIVISION" ? f.divisionId : undefined, userIds: scope === "MANUAL" ? picked : undefined,
           ...(freq === "ONCE" ? { dueDate: new Date(f.dueDate).toISOString() } : { dueDay: Number(f.dueDay) }),
         },
       }),
@@ -119,10 +123,18 @@ function PlanDialog({ kas, open, onClose }: { kas: string; open: boolean; onClos
         {freq === "ONCE"
           ? <Field label="Jatuh tempo"><Input name="dueDate" type="datetime-local" required /></Field>
           : <Field label="Tanggal jatuh tempo" hint={freq === "MONTHLY" ? "Tiap bulan" : "Di bulan pertama semester (Jan/Jul)"}><Input name="dueDay" type="number" min={1} max={28} required defaultValue={10} /></Field>}
-        {/* Kas divisi selalu menagih anggota divisinya sendiri (dipaksa juga di server). */}
-        {kas === "org" && <div><Tabs value={scope} onChange={setScope} items={[{ value: "ALL", label: "Semua anggota" }, { value: "DIVISION", label: "Satu divisi" }]} /></div>}
-        {kas === "org" && scope === "DIVISION" && (
+        {/* Kas divisi hanya bisa menagih anggota divisinya sendiri (dipaksa juga di server). */}
+        <div><Tabs value={scope} onChange={setScope} items={org
+          ? [{ value: "ALL", label: "Semua anggota" }, { value: "DIVISION", label: "Satu divisi" }, { value: "MANUAL", label: "Pilih orang" }]
+          : [{ value: "DIVISION", label: "Seluruh divisi" }, { value: "MANUAL", label: "Pilih anggota" }]} /></div>
+        {org && scope === "DIVISION" && (
           <Field label="Divisi"><Select name="divisionId" required><option value="">Pilih divisi</option>{divisions.data?.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</Select></Field>
+        )}
+        {scope === "MANUAL" && (
+          <div className="grid gap-1.5">
+            <ParticipantPicker picked={picked} onChange={setPicked} divisionId={org ? undefined : kas} />
+            <p className="text-xs text-slate-500">{picked.length} orang dipilih. Hanya mereka yang menerima tagihan.</p>
+          </div>
         )}
         <ErrorText error={save.error} />
       </form>
