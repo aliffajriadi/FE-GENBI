@@ -204,7 +204,7 @@ export default function PointsPage() {
         </div>
       </div>
 
-      <AdjustDialog open={adjust} onClose={() => setAdjust(false)} divisionId={me && !["SYS_ADMIN", "KETUM", "SEKRETARIS"].includes(me.role) ? me.division?.id ?? null : null} />
+      <AdjustDialog open={adjust} onClose={() => setAdjust(false)} divisionId={me && !["SYS_ADMIN", "KETUM", "WAKETUM", "SEKRETARIS"].includes(me.role) ? me.division?.id ?? null : null} />
     </>
   );
 }

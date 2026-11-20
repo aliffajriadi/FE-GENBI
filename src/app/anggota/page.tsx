@@ -7,7 +7,7 @@ import { Initials, SiteFooter, SiteHeader } from "@/components/site/site-shell";
 export const metadata: Metadata = { title: "Anggota · MyGenBI", description: "Pengurus dan anggota GenBI kepengurusan berjalan." };
 
 type Member = { id: string; name: string; avatarUrl: string | null; role: string; position: string; division: { id: string; name: string } | null };
-const CORE = ["KETUM", "SEKRETARIS", "BENDAHARA"];
+const CORE = ["KETUM", "WAKETUM", "SEKRETARIS", "BENDAHARA"];
 
 // Direktori publik: pengurus inti dulu, lalu per divisi (Kadiv di depan).
 export default async function MembersPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {

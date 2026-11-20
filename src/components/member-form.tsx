@@ -10,6 +10,7 @@ export const ROLE_OPTIONS: [string, string][] = [
   ["KADIV", "Kepala Divisi"],
   ["SEKRETARIS", "Sekretaris"],
   ["BENDAHARA", "Bendahara"],
+  ["WAKETUM", "Wakil Ketua Umum"],
   ["KETUM", "Ketua Umum"],
   ["SYS_ADMIN", "System Administrator"],
 ];
