@@ -24,3 +24,10 @@ export const KIND = {
   NEWS: { label: "Kabar GenBI", href: "/kabar" },
   PERSONAL: { label: "Artikel Anggota", href: "/artikel" },
 } as const;
+
+// Kontak organisasi (Pengaturan → Kontak). String kosong = tidak ditampilkan.
+export type Contacts = { email: string; whatsapp: string; instagram: string; youtube: string; tiktok: string; linkedin: string; address: string };
+export const NO_CONTACTS: Contacts = { email: "", whatsapp: "", instagram: "", youtube: "", tiktok: "", linkedin: "", address: "" };
+export const getContacts = () => getPublic<Contacts>("/public/contacts", NO_CONTACTS, 300);
+// 0812… → https://wa.me/62812…
+export const waLink = (n: string, text?: string) => `https://wa.me/${n.replace(/\D/g, "").replace(/^0/, "62")}${text ? `?text=${encodeURIComponent(text)}` : ""}`;

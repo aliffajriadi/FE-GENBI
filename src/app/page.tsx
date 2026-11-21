@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, PenLine, ScanLine, Trophy, Wallet } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { ArticleCard, ArticleRow } from "@/components/site/article-card";
 import { InstagramSection, type InstagramFeed } from "@/components/site/instagram-section";
-import { getPublic, publicImg, type PublicArticle } from "@/components/site/public-api";
+import { getContacts, getPublic, publicImg, type PublicArticle } from "@/components/site/public-api";
 import { fmtDay, SiteFooter, SiteHeader } from "@/components/site/site-shell";
+import { SponsorshipSection } from "@/components/site/sponsorship-section";
 
 // Landing page publik (SSR + cache 5 menit).
 type Stats = { period: string | null; members: number; divisions: number; events: number };
@@ -12,7 +13,7 @@ type Site = { heroImage: string | null; heroAlt?: string; headline: string; subh
 type Indicators = { updatedAt: string; source: string; items: { key: string; label: string; value: string; period: string | null }[] } | null;
 
 export default async function Home() {
-  const [site, bi, stats, divisions, news, personal, instagram] = await Promise.all([
+  const [site, bi, stats, divisions, news, personal, instagram, contacts] = await Promise.all([
     getPublic<Site>("/public/site", { heroImage: null, headline: "Generasi Baru Indonesia" }, 30),
     getPublic<Indicators>("/public/bi-indicators", null, 1800),
     getPublic<Stats>("/public/stats", { period: null, members: 0, divisions: 0, events: 0 }),
@@ -20,6 +21,7 @@ export default async function Home() {
     getPublic<PublicArticle[]>("/public/articles?kind=NEWS&limit=4", []),
     getPublic<PublicArticle[]>("/public/articles?kind=PERSONAL&limit=4", []),
     getPublic<InstagramFeed | null>("/public/instagram", null, 300), // feed tersimpan di DB backend, diperbarui tiap 30 menit
+    getContacts(),
   ]);
   const heroImg = publicImg(site.heroImage);
 
@@ -133,34 +135,8 @@ export default async function Home() {
         </section>
       )}
 
-      {/* ───── Untuk anggota ───── */}
-      <section className="px-5 pb-20 sm:px-6">
-        <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl bg-slate-900 text-white">
-          <div className="grid gap-12 p-8 sm:p-14 lg:grid-cols-[1.1fr_1fr] lg:items-center">
-            <div>
-              <h2 className="font-serif text-[36px] leading-[1.1] font-medium tracking-[-0.02em] sm:text-[44px]">Satu tempat untuk semua urusan anggota.</h2>
-              <p className="mt-5 max-w-md text-[17px] leading-relaxed text-slate-300">Tidak perlu lagi rekap di grup WhatsApp dan spreadsheet. Masuk dengan akun dari Sekretaris.</p>
-              <Link href="/login" className="mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 text-[15px] font-medium text-slate-900 transition-colors hover:bg-slate-200">
-                Masuk ke panel <ArrowRight size={16} aria-hidden />
-              </Link>
-            </div>
-            <ul className="grid gap-px overflow-hidden rounded-2xl bg-white/10 sm:grid-cols-2">
-              {[
-                { icon: ScanLine, t: "Absen sekali scan", d: "QR berganti tiap 20 detik, tidak bisa dititipkan." },
-                { icon: Trophy, t: "Poin keaktifan", d: "Hadir, panitia, menulis: semua tercatat otomatis." },
-                { icon: Wallet, t: "Bayar kas", d: "Upload bukti transfer, bendahara verifikasi." },
-                { icon: PenLine, t: "Menulis", d: "Terbitkan cerita dan opini langsung ke web." },
-              ].map(({ icon: Icon, t, d }) => (
-                <li key={t} className="bg-slate-900 p-6">
-                  <Icon size={20} className="text-blue-300" aria-hidden />
-                  <p className="mt-4 font-medium">{t}</p>
-                  <p className="mt-1 text-[14px] leading-relaxed text-slate-400">{d}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
+      {/* ───── Sponsorship + kontak organisasi (Pengaturan → Kontak) ───── */}
+      <SponsorshipSection contacts={contacts} members={stats.members} events={stats.events} />
 
       <SiteFooter />
     </div>

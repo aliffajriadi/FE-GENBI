@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { publicImg } from "./public-api";
+import { ArrowRight, Instagram, Linkedin, Mail, MapPin, MessageCircle, Music2, Youtube } from "lucide-react";
+import { getContacts, publicImg, waLink } from "./public-api";
 import { ScrollHeader } from "./scroll-header";
 
 const NAV = [
@@ -59,13 +59,33 @@ export function SiteHeader({ active, overlay }: { active?: string; overlay?: boo
   );
 }
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const c = await getContacts();
+  const socials = [
+    { href: c.instagram, label: "Instagram", icon: Instagram },
+    { href: c.youtube, label: "YouTube", icon: Youtube },
+    { href: c.tiktok, label: "TikTok", icon: Music2 },
+    { href: c.linkedin, label: "LinkedIn", icon: Linkedin },
+  ].filter((x) => x.href);
+  const hasContact = c.email || c.whatsapp || c.address;
+
   return (
     <footer className="border-t border-slate-200/70 bg-white">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div className={`mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:px-6 ${hasContact ? "md:grid-cols-[1.4fr_1fr_1fr_1.3fr]" : "md:grid-cols-[1.4fr_1fr_1fr]"}`}>
         <div>
           <Logo />
           <p className="mt-4 max-w-sm text-[14px] leading-relaxed text-slate-500">Generasi Baru Indonesia: komunitas mahasiswa penerima beasiswa Bank Indonesia yang bergerak di bidang sosial, edukasi, dan kepemimpinan.</p>
+          {socials.length > 0 && (
+            <ul className="mt-5 flex gap-2">
+              {socials.map(({ href, label, icon: Icon }) => (
+                <li key={label}>
+                  <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="grid size-9 place-items-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-primary hover:text-white">
+                    <Icon size={16} aria-hidden />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div>
           <p className="text-[13px] font-semibold text-slate-900">Baca</p>
@@ -83,6 +103,16 @@ export function SiteFooter() {
             <li><Link href="/dashboard/scan" className="hover:text-slate-900">Scan absensi</Link></li>
           </ul>
         </div>
+        {hasContact && (
+          <div>
+            <p className="text-[13px] font-semibold text-slate-900">Kontak</p>
+            <ul className="mt-3 grid gap-2.5 text-[14px] text-slate-500">
+              {c.email && <li><a href={`mailto:${c.email}`} className="flex items-center gap-2 break-all hover:text-slate-900"><Mail size={15} className="shrink-0" aria-hidden /> {c.email}</a></li>}
+              {c.whatsapp && <li><a href={waLink(c.whatsapp)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-slate-900"><MessageCircle size={15} className="shrink-0" aria-hidden /> {c.whatsapp}</a></li>}
+              {c.address && <li className="flex gap-2"><MapPin size={15} className="mt-0.5 shrink-0" aria-hidden /> <span className="whitespace-pre-line">{c.address}</span></li>}
+            </ul>
+          </div>
+        )}
       </div>
       <div className="border-t border-slate-100">
         <p className="mx-auto max-w-6xl px-5 py-6 text-[13px] text-slate-400 sm:px-6">© {new Date().getFullYear()} MyGenBI</p>
