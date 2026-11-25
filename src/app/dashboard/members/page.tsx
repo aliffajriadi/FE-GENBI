@@ -1,11 +1,11 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, FileSpreadsheet, Plus, Search, UserPlus, Users } from "lucide-react";
 import { Dialog } from "@/components/dialog";
 import { MemberForm, ROLE_OPTIONS } from "@/components/member-form";
-import { Avatar, Badge, Button, EmptyState, Input, PageHeader, Select, Table, Td } from "@/components/ui";
+import { Avatar, Badge, Button, EmptyState, Input, PageHeader, Select, Table, Tabs, Td } from "@/components/ui";
 import { apiPage, api } from "@/lib/api";
 import type { Division } from "@/lib/types";
 import { useMe } from "@/lib/use-me";
@@ -18,11 +18,20 @@ type Member = {
 };
 const LIMIT = 25;
 
-// Pengurus (user.read) melihat tabel data anggota; anggota biasa melihat direktori kartu.
+// Pengurus (user.read) bisa berpindah antara tabel data & direktori; anggota biasa hanya melihat direktori kartu.
 export default function MembersPage() {
   const { can, isLoading } = useMe();
+  const [tab, setTab] = useState<"data" | "directory">("data");
+  // Tautan bidang/skill dari profil membuka direktori yang sudah terfilter.
+  useEffect(() => { if (/[?&](field|skill)=/.test(location.search)) setTab("directory"); }, []);
   if (isLoading) return null;
-  return can("user.read") ? <MembersAdmin /> : <MemberDirectory />;
+  if (!can("user.read")) return <MemberDirectory />;
+  return (
+    <>
+      <div className="mb-6"><Tabs value={tab} onChange={setTab} items={[{ value: "data", label: "Data anggota" }, { value: "directory", label: "Direktori & skill" }]} /></div>
+      {tab === "data" ? <MembersAdmin /> : <MemberDirectory />}
+    </>
+  );
 }
 
 function MembersAdmin() {

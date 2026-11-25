@@ -10,7 +10,7 @@ import { fmtDate } from "@/lib/format";
 import { useMe } from "@/lib/use-me";
 
 type Profile = {
-  id: string; name: string; avatarUrl: string | null; coverUrl: string | null; bio: string | null; instagram: string | null; tiktok: string | null; linkedin: string | null; website: string | null; campus: string | null; major: string | null; batch: string | null; createdAt: string;
+  id: string; name: string; avatarUrl: string | null; coverUrl: string | null; bio: string | null; instagram: string | null; tiktok: string | null; linkedin: string | null; website: string | null; campus: string | null; major: string | null; batch: string | null; createdAt: string; fields: string[]; skills: string[];
   position: string | null; division: string | null;
   memberships: { position: string | null; role: { name: string }; division: { name: string } | null; period: { name: string; isActive: boolean } }[];
   stats: { points: number; rank: number | null; of: number; attendance: number | null; events: number; articles: number };
@@ -51,6 +51,12 @@ export default function PersonPage({ params }: { params: Promise<{ id: string }>
           {p.bio && <p className="mt-4 max-w-2xl text-[15px] leading-relaxed whitespace-pre-line text-slate-700">{p.bio}</p>}
           {(study || p.batch) && (
             <p className="mt-3 flex items-center gap-2 text-[14px] text-slate-500"><GraduationCap size={16} aria-hidden /> {[study, p.batch && `Angkatan ${p.batch}`].filter(Boolean).join(" · ")}</p>
+          )}
+          {(p.fields?.length > 0 || p.skills?.length > 0) && (
+            <ul className="mt-4 flex flex-wrap gap-1.5" aria-label="Bidang dan skill">
+              {p.fields.map((f) => <li key={`f-${f}`}><Link href={`/dashboard/members?field=${encodeURIComponent(f)}`} className="inline-block rounded-md bg-primary/10 px-2.5 py-1 text-[13px] font-medium text-primary hover:bg-primary/15">{f}</Link></li>)}
+              {p.skills.map((s) => <li key={`s-${s}`}><Link href={`/dashboard/members?skill=${encodeURIComponent(s)}`} className="inline-block rounded-md bg-slate-100 px-2.5 py-1 text-[13px] text-slate-700 hover:bg-slate-200/70">{s}</Link></li>)}
+            </ul>
           )}
           {links.length > 0 && (
             <ul className="mt-4 flex flex-wrap gap-2">

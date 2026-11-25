@@ -1,8 +1,10 @@
+export type ProfileTag = { id: string; kind: "FIELD" | "SKILL"; name: string; official: boolean; count: number };
+
 export type Me = {
   id: string; name: string; email: string; avatarUrl: string | null;
   coverUrl: string | null; bio: string | null; instagram: string | null; tiktok: string | null; linkedin: string | null; website: string | null; profilePublic: boolean; nim: string | null; phone: string | null; campus: string | null; major: string | null; batch: string | null;
   role: string; roleName: string; position: string | null;
-  division: { id: string; name: string } | null; period: { id: string; name: string } | null; permissions: string[]; divisionGrants: string[]; memberQr: string;
+  division: { id: string; name: string } | null; period: { id: string; name: string } | null; permissions: string[]; divisionGrants: string[]; memberQr: string; fields: string[]; skills: string[];
 };
 
 export type AttStatus = "HADIR" | "TELAT" | "IZIN" | "SAKIT" | "ALPA";

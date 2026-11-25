@@ -7,7 +7,7 @@ import { fmtDay, Initials, SiteFooter, SiteHeader } from "@/components/site/site
 import { socialLinks } from "@/lib/social";
 
 type Profile = {
-  id: string; name: string; avatarUrl: string | null; coverUrl: string | null; bio: string | null; instagram: string | null; tiktok: string | null; linkedin: string | null; website: string | null;
+  id: string; name: string; avatarUrl: string | null; coverUrl: string | null; bio: string | null; instagram: string | null; tiktok: string | null; linkedin: string | null; website: string | null; fields: string[]; skills: string[];
   memberships: { position: string | null; role: { key: string; name: string }; division: { name: string } | null; period: { name: string; isActive: boolean } }[];
   articles: { id: string; title: string; slug: string; kind: "NEWS" | "PERSONAL"; excerpt: string | null; coverUrl: string | null; coverAlt: string | null; publishedAt: string }[];
 };
@@ -40,6 +40,12 @@ export default async function PublicProfile({ params }: { params: Promise<{ id: 
           <h1 className="mt-5 font-serif text-[40px] leading-tight font-medium tracking-[-0.02em]">{p.name}</h1>
           {now && <p className="mt-1 text-[17px] text-slate-600">{now.position ?? now.role.name}{now.division ? ` · Divisi ${now.division.name}` : ""}</p>}
           {p.bio && <p className="mt-6 font-serif text-[21px] leading-relaxed whitespace-pre-line text-slate-700">{p.bio}</p>}
+          {(p.fields?.length > 0 || p.skills?.length > 0) && (
+            <ul className="mt-6 flex flex-wrap gap-2" aria-label="Bidang dan skill">
+              {p.fields.map((f) => <li key={`f-${f}`}><Link href={`/anggota?field=${encodeURIComponent(f)}`} className="inline-block rounded-md bg-blue-50 px-3 py-1 text-[14px] font-medium text-primary hover:bg-blue-100">{f}</Link></li>)}
+              {p.skills.map((s) => <li key={`s-${s}`}><Link href={`/anggota?skill=${encodeURIComponent(s)}`} className="inline-block rounded-md bg-slate-100 px-3 py-1 text-[14px] text-slate-700 hover:bg-slate-200">{s}</Link></li>)}
+            </ul>
+          )}
           {links.length > 0 && (
             <ul className="mt-6 flex flex-wrap gap-2">
               {links.map((l) => (

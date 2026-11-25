@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { AtSign, Briefcase, Camera, Globe, ImagePlus, KeyRound, Loader2, QrCode, Trash2, UserRound } from "lucide-react";
 import Link from "next/link";
 import { resizeJpeg } from "@/lib/image";
+import { ExpertiseForm } from "@/components/expertise-form";
 import { useToast } from "@/components/toast";
 import { Avatar, Button, Card, CardHeader, ErrorText, Field, Input, PageHeader, Skeleton, Textarea } from "@/components/ui";
 import { api, publicFile, saveTokens, uploadFile } from "@/lib/api";
@@ -71,7 +72,7 @@ export default function ProfilePage() {
                 <input type="checkbox" name="profilePublic" defaultChecked={me.profilePublic} className="mt-0.5 size-4 accent-[var(--primary)]" />
                 <span>
                   <span className="block text-sm font-medium">Tampilkan profil di web publik</span>
-                  <span className="mt-0.5 block text-xs text-slate-500">Foto, nama, jabatan, bio, medsos, dan artikelmu bisa dilihat siapa saja di halaman Anggota. Kontak, NIM, dan kampus tidak pernah ditampilkan.</span>
+                  <span className="mt-0.5 block text-xs text-slate-500">Foto, nama, jabatan, bio, bidang, skill, medsos, dan artikelmu bisa dilihat siapa saja di halaman Anggota. Kontak, NIM, dan kampus tidak pernah ditampilkan.</span>
                 </span>
               </label>
               <div className="flex items-center justify-end gap-3 sm:col-span-2">
@@ -80,6 +81,8 @@ export default function ProfilePage() {
               </div>
             </form>
           </Card>
+
+          <ExpertiseForm key={`expertise-${me.id}`} me={me} />
 
           <Card>
             <CardHeader icon={UserRound} title="Data diri" desc="Dipakai pengurus untuk menghubungi Anda." />

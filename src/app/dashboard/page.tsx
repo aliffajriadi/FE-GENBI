@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, ArrowUpRight, CalendarCheck, CalendarX2, CheckSquare, Clock, Inbox, Landmark, MapPin, Radio, ScanLine, Trophy, Users, Wallet } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarCheck, CalendarX2, CheckSquare, Clock, Inbox, Landmark, MapPin, Radio, ScanLine, Sparkles, Trophy, Users, Wallet } from "lucide-react";
 import { AttendanceMix, AttendanceTrend, PointsGrowth, type TrendPoint } from "@/components/dashboard-charts";
 import { EventCalendar } from "@/components/event-calendar";
 import { Avatar, Badge, Button, Card, CardHeader, DateTile, EmptyState, PageHeader, Skeleton, StatCard } from "@/components/ui";
@@ -66,6 +66,17 @@ export default function DashboardPage() {
           <Link href={`/dashboard/events/${d.openEvents[0].id}`}>
             <Button variant="outline" size="sm">Kelola <ArrowRight size={14} aria-hidden /></Button>
           </Link>
+        </Card>
+      )}
+
+      {me?.role !== "SYS_ADMIN" && me?.fields?.length === 0 && me.skills.length === 0 && (
+        <Card className="mb-6 flex flex-wrap items-center gap-4 px-5 py-4">
+          <span className="grid size-9 place-items-center rounded-md bg-primary/10 text-primary"><Sparkles size={18} aria-hidden /></span>
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-slate-900">Lengkapi bidang & skill kamu</p>
+            <p className="text-[13px] text-slate-500">Supaya mudah ditemukan saat ada kepanitiaan atau proyek.</p>
+          </div>
+          <Link href="/dashboard/profile#keahlian"><Button variant="outline" size="sm">Isi sekarang <ArrowRight size={14} aria-hidden /></Button></Link>
         </Card>
       )}
 
