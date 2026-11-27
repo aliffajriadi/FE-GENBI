@@ -2,20 +2,22 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronsUpDown, CornerDownLeft, LogOut, Menu as MenuIcon, Monitor, Moon, ScanLine, Search, Sun, UserRound, X } from "lucide-react";
+import { ChevronsUpDown, CornerDownLeft, LogOut, Wrench, Menu as MenuIcon, Monitor, Moon, ScanLine, Search, Sun, UserRound, X } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { Dialog } from "@/components/dialog";
 import { Menu, MenuItem } from "@/components/menu";
 import { NotificationBell } from "@/components/notification-bell";
 import { Avatar, Button, cx, Skeleton } from "@/components/ui";
 import { hasSession, logout } from "@/lib/api";
+import { menuKey, useMaintenance } from "@/lib/maintenance";
 import { visibleNav } from "@/lib/nav";
 import { useMe } from "@/lib/use-me";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const path = usePathname();
-  const { me } = useMe();
+  const { me, can } = useMe();
+  const maint = useMaintenance();
   const [drawer, setDrawer] = useState(false);
   const [palette, setPalette] = useState(false);
 
@@ -47,8 +49,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Menu maintenance: anggota melihat pesan, System Administrator tetap bisa masuk untuk mengecek.
+  const maintMsg = maint.get(menuKey(path));
+  const page = maintMsg === undefined ? children : can("settings.manage") ? (
+    <>
+      <p className="mx-auto mb-4 flex max-w-7xl items-center gap-2 rounded-lg bg-amber-50 px-4 py-2.5 text-[13px] text-amber-800"><Wrench size={14} aria-hidden /> Menu ini sedang maintenance untuk anggota. Kamu tetap bisa membukanya sebagai admin.</p>
+      {children}
+    </>
+  ) : (
+    <div className="mx-auto flex max-w-md flex-col items-center px-6 py-20 text-center">
+      <span className="grid size-14 place-items-center rounded-full bg-amber-50 text-amber-600"><Wrench size={24} aria-hidden /></span>
+      <h1 className="mt-4 text-lg font-semibold text-slate-900">Sedang maintenance</h1>
+      <p className="mt-2 text-[14px] whitespace-pre-line text-slate-600">{maintMsg || "Menu ini sedang diperbaiki. Coba lagi nanti."}</p>
+      <Link href="/dashboard" className="mt-6"><Button variant="outline" size="sm">Kembali ke dashboard</Button></Link>
+    </div>
+  );
   // Layar QR (proyektor) dan editor artikel tampil penuh tanpa sidebar.
-  if (path.endsWith("/qr") || /^\/dashboard\/articles\/[^/]+$/.test(path)) return <>{children}</>;
+  if (path.endsWith("/qr") || /^\/dashboard\/articles\/[^/]+$/.test(path)) return <>{page}</>;
 
   const sections = visibleNav(me);
   const current = sections.flatMap((s) => s.items).filter((i) => (i.href === "/dashboard" ? path === i.href : path.startsWith(i.href))).at(-1);
@@ -92,6 +109,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     >
                       <Icon size={17} strokeWidth={active ? 2.2 : 1.9} className={cx("transition-[color,transform] duration-200", active ? "text-primary" : "text-slate-400 group-hover:translate-x-0.5 group-hover:text-slate-600")} aria-hidden />
                       {label}
+                      {maint.has(menuKey(href)) && <Wrench size={13} className="ml-auto text-amber-500" aria-label="Sedang maintenance" />}
                     </Link>
                   </li>
                 );
@@ -164,9 +182,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
         {path.startsWith("/dashboard/chat") ? (
           // Diskusi memakai tinggi layar penuh (daftar channel + percakapan), tanpa padding halaman.
-          <main className="h-[calc(100dvh-3.5rem)] lg:h-dvh">{children}</main>
+          <main className="h-[calc(100dvh-3.5rem)] lg:h-dvh">{page}</main>
         ) : (
-          <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">{children}</main>
+          <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">{page}</main>
         )}
       </div>
 
