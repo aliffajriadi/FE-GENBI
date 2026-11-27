@@ -4,20 +4,29 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ScanLine } from "lucide-react";
 import { Dialog } from "@/components/dialog";
+import { FilePick } from "@/components/file-pick";
+import { VideoNote } from "@/components/video-note";
 import { QrReader } from "@/components/qr-reader";
 import { useToast } from "@/components/toast";
 import { Badge, Button, Card, CardHeader, cx, ErrorText, Field, Select, Skeleton, Textarea } from "@/components/ui";
-import { api } from "@/lib/api";
+import { api, ApiError, uploadFile, uploadVideo } from "@/lib/api";
 import type { EventItem } from "@/lib/types";
 
 export function MyStatus({ event: e, onDone }: { event: EventItem; onDone: () => void }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
+  const [video, setVideo] = useState<File | null>(null);
+  const [letter, setLetter] = useState<File | null>(null);
   const my = useQuery({ queryKey: ["events"], queryFn: () => api<EventItem[]>("/events") });
   const mine = my.data?.find((x) => x.id === e.id);
   const leave = useMutation({
-    mutationFn: (body: { kind: string; reason: string }) => api(`/events/${e.id}/leave-requests`, { method: "POST", body }),
-    onSuccess: () => { setOpen(false); onDone(); toast("Pengajuan izin terkirim ke pembuat kegiatan."); },
+    mutationFn: async (body: { kind: string; reason: string }) => {
+      if (!video) throw new ApiError("VALIDATION", "Rekam video note dulu", 400);
+      if (letter && letter.type !== "application/pdf") throw new ApiError("VALIDATION", "Lampiran surat harus PDF", 400);
+      const [v, l] = await Promise.all([uploadVideo(video), letter && uploadFile(letter)]);
+      return api(`/events/${e.id}/leave-requests`, { method: "POST", body: { ...body, videoUrl: v.url, ...(l && { attachmentUrl: l.url }) } });
+    },
+    onSuccess: () => { setOpen(false); setVideo(null); setLetter(null); onDone(); toast("Pengajuan izin terkirim ke pembuat kegiatan."); },
   });
 
   return (
@@ -49,6 +58,8 @@ export function MyStatus({ event: e, onDone }: { event: EventItem; onDone: () =>
         >
           <Field label="Jenis"><Select name="kind"><option value="IZIN">Izin</option><option value="SAKIT">Sakit</option></Select></Field>
           <Field label="Alasan"><Textarea name="reason" required minLength={3} placeholder="Jelaskan singkat alasannya" /></Field>
+          <Field label="Video note (wajib, rekam langsung)"><VideoNote file={video} onChange={setVideo} /></Field>
+          <FilePick file={letter} onChange={setLetter} accept="application/pdf" label="Surat / dokumen pendukung (opsional) · PDF maks 2 MB" />
           <ErrorText error={leave.error} />
         </form>
       </Dialog>

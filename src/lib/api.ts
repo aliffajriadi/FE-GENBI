@@ -89,6 +89,15 @@ export async function uploadFile(input: File, opts: { public?: boolean } = {}): 
   return json.data;
 }
 
+export const MAX_VIDEO = 15 * 1024 * 1024; // sama dengan batas server
+
+export async function uploadVideo(file: File): Promise<Uploaded> {
+  if (file.size > MAX_VIDEO) throw new ApiError("UPLOAD_INVALID", "Video terlalu besar (maks 15 MB). Rekam lebih singkat.", 400);
+  const fd = new FormData();
+  fd.append("file", file);
+  return apiForm<Uploaded>("/uploads/video", fd);
+}
+
 // File privat butuh header Authorization, jadi diambil sebagai blob lalu dibuka.
 export async function fileBlobUrl(url: string) {
   const res = await raw(url);

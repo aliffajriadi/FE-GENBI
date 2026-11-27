@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Inbox, X } from "lucide-react";
+import { FileText, Inbox, Video, X } from "lucide-react";
 import { Dialog } from "@/components/dialog";
 import { ParticipantPicker } from "@/components/participant-picker";
 import { useToast } from "@/components/toast";
 import { Avatar, Badge, Button, EmptyState, ErrorText, Skeleton, Table, Td } from "@/components/ui";
-import { api } from "@/lib/api";
+import { api, openFile } from "@/lib/api";
 import { type Leave } from "../_lib";
 
 export function LeaveList({ leaves, loading, disabled, onDone }: { leaves: Leave[]; loading: boolean; disabled: boolean; onDone: () => void }) {
@@ -22,7 +22,13 @@ export function LeaveList({ leaves, loading, disabled, onDone }: { leaves: Leave
         <tr key={l.id}>
           <Td><span className="flex items-center gap-3"><Avatar name={l.user.name} size={28} /><span className="font-medium">{l.user.name}</span></span></Td>
           <Td>{l.kind === "SAKIT" ? "Sakit" : "Izin"}</Td>
-          <Td className="max-w-sm text-slate-600">{l.reason}</Td>
+          <Td className="max-w-sm text-slate-600">
+            {l.reason}
+            <span className="mt-1 flex gap-1">
+              {l.videoUrl && <Button size="sm" variant="ghost" onClick={() => openFile(l.videoUrl!).catch((e) => toast(e.message, { error: true }))}><Video size={13} aria-hidden /> Video</Button>}
+              {l.attachmentUrl && <Button size="sm" variant="ghost" onClick={() => openFile(l.attachmentUrl!).catch((e) => toast(e.message, { error: true }))}><FileText size={13} aria-hidden /> Surat</Button>}
+            </span>
+          </Td>
           <Td><Badge status={l.status} /></Td>
           <Td className="text-right whitespace-nowrap">
             {l.status === "PENDING" && !disabled && (
