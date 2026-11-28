@@ -8,11 +8,12 @@ import { Roles } from "./_components/roles";
 import { SiteSettings } from "./_components/site-settings";
 import { AppVersionSettings } from "./_components/app-version-settings";
 import { LoginPageSettings } from "./_components/login-page-settings";
+import { PhotoboothPageSettings } from "./_components/photobooth-page-settings";
 import { ContactsSettings } from "./_components/contacts-settings";
 import { InstagramSettings } from "./_components/instagram-settings";
 import { MaintenanceSettings } from "./_components/maintenance-settings";
 
-type TabKey = "site" | "contacts" | "divisions" | "periods" | "roles" | "app" | "login" | "instagram" | "maintenance";
+type TabKey = "site" | "contacts" | "divisions" | "periods" | "roles" | "app" | "login" | "photobooth" | "instagram" | "maintenance";
 
 export default function SettingsPage() {
   const { can } = useMe();
@@ -20,7 +21,7 @@ export default function SettingsPage() {
     ...(can("article.publish") ? [{ value: "site" as const, label: "Tampilan web" }, { value: "contacts" as const, label: "Kontak" }] : []),
     ...(can("division.manage") ? [{ value: "divisions" as const, label: "Divisi" }, { value: "periods" as const, label: "Periode" }] : []),
     ...(can("role.manage") ? [{ value: "roles" as const, label: "Role & akses" }] : []),
-    ...(can("settings.manage") ? [{ value: "app" as const, label: "Aplikasi mobile" }, { value: "login" as const, label: "Halaman login" }, { value: "instagram" as const, label: "Instagram" }, { value: "maintenance" as const, label: "Maintenance" }] : []),
+    ...(can("settings.manage") ? [{ value: "app" as const, label: "Aplikasi mobile" }, { value: "login" as const, label: "Halaman login" }, { value: "photobooth" as const, label: "Photobooth" }, { value: "instagram" as const, label: "Instagram" }, { value: "maintenance" as const, label: "Maintenance" }] : []),
   ];
   const [tab, setTab] = useState<TabKey>("site");
   // Kembali dari halaman izin Instagram: ?tab=instagram&ig=ok|denied|invalid|error
@@ -41,6 +42,7 @@ export default function SettingsPage() {
       {active === "contacts" && <ContactsSettings />}
       {active === "app" && <AppVersionSettings />}
       {active === "login" && <LoginPageSettings />}
+      {active === "photobooth" && <PhotoboothPageSettings />}
       {active === "instagram" && <InstagramSettings />}
       {active === "maintenance" && <MaintenanceSettings />}
     </>

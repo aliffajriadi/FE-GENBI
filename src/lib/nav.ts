@@ -1,6 +1,7 @@
 import {
   Activity,
   Bell,
+  Camera,
   CalendarCheck,
   FolderOpen,
   MessagesSquare,
@@ -56,6 +57,7 @@ export const NAV: { section: string; items: NavItem[] }[] = [
       { href: "/dashboard/admin", label: "Administrasi", icon: FolderOpen },
       { href: "/dashboard/signatures", label: "Tanda tangan", icon: Signature, show: (m) => has(m, "signature.create") },
       { href: "/dashboard/links", label: "Shortlink", icon: Link2 },
+      { href: "/dashboard/photobooth", label: "Photobooth", icon: Camera },
       { href: "/dashboard/forms", label: "Form", icon: ListChecks, show: (m) => has(m, "event.create", "admin.manage") },
       { href: "/dashboard/slots", label: "Slot kelompok", icon: LayoutGrid, show: (m) => has(m, "event.create", "admin.manage") },
     ],

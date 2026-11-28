@@ -7,6 +7,7 @@ const NAV = [
   { href: "/kabar", label: "Kabar" },
   { href: "/artikel", label: "Artikel" },
   { href: "/anggota", label: "Anggota" },
+  { href: "/photobooth", label: "Photobooth" },
 ];
 
 // overlay: logo putih di atas hero, berganti logo berwarna saat header sudah di-scroll.
@@ -93,6 +94,7 @@ export async function SiteFooter() {
             <li><Link href="/kabar" className="hover:text-slate-900">Kabar GenBI</Link></li>
             <li><Link href="/artikel" className="hover:text-slate-900">Artikel Anggota</Link></li>
             <li><Link href="/anggota" className="hover:text-slate-900">Anggota</Link></li>
+            <li><Link href="/photobooth" className="hover:text-slate-900">Photobooth</Link></li>
           </ul>
         </div>
         <div>
