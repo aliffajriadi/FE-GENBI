@@ -22,7 +22,7 @@ export default function PhotoboothListPage() {
   const router = useRouter();
   const [confirm, confirmDialog] = useConfirm();
   const [creating, setCreating] = useState(false);
-  const q = useQuery({ queryKey: ["photobooth"], queryFn: () => api<{ canPublish: boolean; rows: Row[] }>("/photobooth") });
+  const q = useQuery({ queryKey: ["photobooth"], queryFn: () => api<{ rows: Row[] }>("/photobooth") });
   const refresh = () => qc.invalidateQueries({ queryKey: ["photobooth"] });
 
   const create = useMutation({
@@ -40,12 +40,11 @@ export default function PhotoboothListPage() {
     onError: (e) => toast(e.message, { error: true }),
   });
 
-  const canPublish = q.data?.canPublish;
   const rows = q.data?.rows ?? [];
 
   return (
     <>
-      <PageHeader title="Photobooth" desc={canPublish ? "Template buatan anggota. Tampilkan yang sudah layak ke halaman publik." : "Buat template photobooth. Pengurus akan meninjau sebelum tampil di halaman publik."}
+      <PageHeader title="Photobooth" desc="Template buatan anggota langsung tampil di halaman Photobooth. Sembunyikan kalau belum siap."
         actions={<>
           <Link href="/photobooth" target="_blank"><Button variant="outline"><ExternalLink size={15} aria-hidden /> Buka photobooth</Button></Link>
           <Button onClick={() => setCreating(true)}><Plus size={15} aria-hidden /> Template baru</Button>
@@ -66,12 +65,12 @@ export default function PhotoboothListPage() {
                   <div className="flex flex-1 flex-col gap-2 border-t border-slate-100 p-4">
                     <div className="flex items-start justify-between gap-2">
                       <p className="min-w-0 truncate font-medium">{t.name}</p>
-                      <Badge tone={t.published ? "green" : "slate"}>{t.published ? "Tampil" : "Draft"}</Badge>
+                      <Badge tone={t.published ? "green" : "slate"}>{t.published ? "Tampil" : "Disembunyikan"}</Badge>
                     </div>
                     <p className="text-xs text-slate-500">oleh {t.createdBy.name}</p>
                     <div className="mt-auto flex flex-wrap gap-1.5 pt-2">
                       {t.canEdit && <Link href={`/dashboard/photobooth/${t.id}`}><Button size="sm" variant="outline"><Pencil size={13} aria-hidden /> Edit</Button></Link>}
-                      {canPublish && (
+                      {t.canEdit && (
                         <Button size="sm" variant="outline" loading={publish.isPending && publish.variables?.id === t.id} onClick={() => publish.mutate({ id: t.id, published: !t.published })}>
                           {t.published ? <><EyeOff size={13} aria-hidden /> Sembunyikan</> : <><Eye size={13} aria-hidden /> Tampilkan</>}
                         </Button>

@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { use, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight, ImagePlus, ScanFace, Type } from "lucide-react";
+import { ChevronRight, ImagePlus, Maximize, ScanFace, Type, ZoomIn, ZoomOut } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { Badge, Button, Card, ErrorText, Field, Input, Skeleton } from "@/components/ui";
 import { uid, type Design, type El } from "@/components/photobooth/design";
@@ -12,7 +12,10 @@ import { Inspector } from "./_components/inspector";
 
 const DesignStage = dynamic(() => import("@/components/photobooth/stage").then((m) => m.DesignStage), { ssr: false });
 
-type Tpl = { id: string; name: string; design: Design; published: boolean; canEdit: boolean; canPublish: boolean };
+const ZOOM_MIN = 0.25;
+const ZOOM_MAX = 6;
+
+type Tpl = { id: string; name: string; design: Design; published: boolean; canEdit: boolean };
 
 export default function PhotoboothEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -24,6 +27,8 @@ export default function PhotoboothEditorPage({ params }: { params: Promise<{ id:
   const [selected, setSelected] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [boxW, setBoxW] = useState(600);
+  const [zoom, setZoom] = useState(1); // relatif terhadap "pas layar"
+  const zoomBy = (k: number) => setZoom((z) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * k * 100) / 100)));
   const box = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -53,6 +58,15 @@ export default function PhotoboothEditorPage({ params }: { params: Promise<{ id:
     return { ...d, elements: els };
   });
 
+  // Ctrl/Cmd + scroll (atau pinch di trackpad) untuk zoom; perlu listener non-passive supaya browser tidak ikut zoom.
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); zoomBy(e.deltaY < 0 ? 1.1 : 1 / 1.1); };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [design === null]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Delete/Backspace menghapus elemen terpilih, kecuali sedang mengetik di kolom.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -66,11 +80,11 @@ export default function PhotoboothEditorPage({ params }: { params: Promise<{ id:
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = useMutation({
-    mutationFn: () => api<{ published: boolean }>(`/photobooth/${id}`, { method: "PUT", body: { name: name.trim(), design } }),
-    onSuccess: (t) => {
+    mutationFn: () => api(`/photobooth/${id}`, { method: "PUT", body: { name: name.trim(), design } }),
+    onSuccess: () => {
       setDirty(false);
       qc.invalidateQueries({ queryKey: ["photobooth"] });
-      toast(q.data?.published && !t.published ? "Disimpan. Template disembunyikan sampai ditinjau pengurus lagi." : "Template disimpan");
+      toast(q.data?.published ? "Disimpan. Perubahan langsung tampil di Photobooth (±1 menit)." : "Template disimpan");
     },
     onError: (e) => toast(e.message, { error: true }),
   });
@@ -94,7 +108,8 @@ export default function PhotoboothEditorPage({ params }: { params: Promise<{ id:
   if (!q.data || !design) return <ErrorText error={q.error} />;
   if (!q.data.canEdit) return <ErrorText error={new Error("Kamu tidak bisa mengubah template ini")} />;
 
-  const scale = Math.min(boxW / design.width, (typeof window === "undefined" ? 800 : window.innerHeight - 220) / design.height);
+  const fit = Math.min((boxW - 32) / design.width, (typeof window === "undefined" ? 800 : window.innerHeight - 260) / design.height);
+  const scale = fit * zoom;
   const el = design.elements.find((e) => e.id === selected);
   const center = (w: number, h: number) => ({ x: Math.round((design.width - w) / 2), y: Math.round((design.height - h) / 2) });
 
@@ -108,7 +123,7 @@ export default function PhotoboothEditorPage({ params }: { params: Promise<{ id:
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <Input aria-label="Nama template" value={name} maxLength={80} onChange={(e) => { setName(e.target.value); setDirty(true); }} className="max-w-xs font-medium" />
-        <Badge tone={q.data.published ? "green" : "slate"}>{q.data.published ? "Tampil" : "Draft"}</Badge>
+        <Badge tone={q.data.published ? "green" : "slate"}>{q.data.published ? "Tampil" : "Disembunyikan"}</Badge>
         <div className="ml-auto flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => { const w = Math.round(design.width * 0.4), h = Math.round(w * 0.75); add({ id: uid(), type: "photo", ...center(w, h), w, h, rotation: 0, radius: 0 }); }}><ScanFace size={15} aria-hidden /> Slot foto</Button>
           <Button variant="outline" onClick={() => { const fs = Math.round(design.width / 12), w = Math.round(design.width * 0.8); add({ id: uid(), type: "text", text: "Teks baru", ...center(w, fs), w, h: Math.round(fs * 1.3), rotation: 0, fontSize: fs, fontFamily: "Inter", fontStyle: "bold", color: "#0f172a", align: "center" }); }}><Type size={15} aria-hidden /> Teks</Button>
@@ -119,9 +134,19 @@ export default function PhotoboothEditorPage({ params }: { params: Promise<{ id:
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <Card className="overflow-hidden bg-[repeating-conic-gradient(#f1f5f9_0_25%,#fff_0_50%)] bg-[length:20px_20px] p-4">
-          <div ref={box} className="flex justify-center">
-            <DesignStage design={design} scale={scale} selectedId={selected} onSelect={setSelected} onChange={setEl} />
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-end gap-1 border-b border-slate-100 px-3 py-2">
+            <span className="mr-auto text-xs text-slate-500">Ctrl + scroll untuk zoom</span>
+            <Button size="icon" variant="ghost" aria-label="Perkecil" title="Perkecil" disabled={zoom <= ZOOM_MIN} onClick={() => zoomBy(1 / 1.25)}><ZoomOut size={16} /></Button>
+            <span className="w-12 text-center text-xs font-medium tabular-nums text-slate-600" aria-live="polite">{Math.round(scale * 100)}%</span>
+            <Button size="icon" variant="ghost" aria-label="Perbesar" title="Perbesar" disabled={zoom >= ZOOM_MAX} onClick={() => zoomBy(1.25)}><ZoomIn size={16} /></Button>
+            <Button size="sm" variant="ghost" title="Pas layar" onClick={() => setZoom(1)}><Maximize size={14} aria-hidden /> Pas</Button>
+          </div>
+          {/* Area scroll: saat diperbesar, kanvas bisa digeser ke semua sisi (mx-auto jadi 0 saat meluap). */}
+          <div ref={box} className="max-h-[calc(100dvh-220px)] overflow-auto bg-[repeating-conic-gradient(#f1f5f9_0_25%,#fff_0_50%)] bg-[length:20px_20px] p-4">
+            <div className="mx-auto w-max">
+              <DesignStage design={design} scale={scale} selectedId={selected} onSelect={setSelected} onChange={setEl} />
+            </div>
           </div>
         </Card>
 
