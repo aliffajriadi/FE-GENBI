@@ -6,7 +6,7 @@ export type Form = {
   isOpen: boolean; closesAt: string | null; onePerUser: boolean; theme: FormTheme | null; _count: { responses: number };
 };
 export type Draft = Omit<Form, "id" | "_count">;
-export type Resp = { id: string; createdAt: string; answers: Record<string, Answer>; user: { name: string; email: string } | null };
+export type Resp = { id: string; createdAt: string; answers: Record<string, Answer>; user: { name: string; email: string | null } | null };
 
 export const timeFmt = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 // <input type="datetime-local"> butuh waktu lokal tanpa zona.

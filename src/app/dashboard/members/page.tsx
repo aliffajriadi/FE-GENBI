@@ -13,7 +13,7 @@ import { MemberDirectory } from "@/components/member-directory";
 import { MemberImport } from "@/components/member-import";
 
 type Member = {
-  id: string; name: string; email: string; avatarUrl: string | null; nim: string | null; status: string; deviceId: string | null;
+  id: string; name: string; email: string | null; avatarUrl: string | null; nim: string | null; status: string; deviceId: string | null;
   role: string; roleName: string; position: string | null; division: { id: string; name: string } | null;
 };
 const LIMIT = 25;
@@ -110,7 +110,7 @@ function MembersAdmin() {
                 <Avatar name={m.name} src={m.avatarUrl} size={34} />
                 <span className="min-w-0">
                   <span className="block font-medium text-slate-900 hover:text-primary">{m.name}</span>
-                  <span className="block truncate text-xs text-slate-500">{m.email}</span>
+                  <span className="block truncate text-xs text-slate-500">{[m.nim, m.email].filter(Boolean).join(" · ")}</span>
                 </span>
               </Link>
             </Td>

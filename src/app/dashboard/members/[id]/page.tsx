@@ -2,19 +2,19 @@
 import Link from "next/link";
 import { use, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarCheck, ChevronRight, GraduationCap, Mail, MoreHorizontal, Pencil, Phone, Trophy, UserX } from "lucide-react";
+import { CalendarCheck, ChevronRight, GraduationCap, KeyRound, Mail, MoreHorizontal, Pencil, Phone, Trophy, UserX } from "lucide-react";
 import { Dialog } from "@/components/dialog";
 import { MemberForm } from "@/components/member-form";
 import { Menu, MenuItem } from "@/components/menu";
 import { useToast } from "@/components/toast";
-import { Avatar, Badge, Button, Card, CardHeader, cx, ErrorText, Skeleton, StatCard } from "@/components/ui";
+import { Avatar, Badge, Button, Card, CardHeader, cx, ErrorText, Field, Input, Skeleton, StatCard } from "@/components/ui";
 import { api } from "@/lib/api";
 import { EVENT_TYPE_LABEL, fmtDate } from "@/lib/format";
 import type { AttStatus, Ledger } from "@/lib/types";
 import { useMe } from "@/lib/use-me";
 
 type Detail = {
-  id: string; name: string; email: string; avatarUrl: string | null; nim: string | null; phone: string | null; campus: string | null; major: string | null; batch: string | null;
+  id: string; name: string; email: string | null; avatarUrl: string | null; nim: string | null; phone: string | null; campus: string | null; major: string | null; batch: string | null;
   status: string; deviceId: string | null;
   memberships: { id: string; position: string | null; periodId: string; role: { key: string; name: string }; division: { id: string; name: string } | null; period: { name: string; isActive: boolean } }[];
   points: { total: number; history: Ledger[] };
@@ -27,12 +27,17 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
   const toast = useToast();
   const { me, can } = useMe();
   const [editing, setEditing] = useState(false);
+  const [resetPw, setResetPw] = useState(false);
   const q = useQuery({ queryKey: ["user", id], queryFn: () => api<Detail>(`/users/${id}`) });
   const refresh = () => qc.invalidateQueries({ predicate: (x) => x.queryKey[0] === "user" || x.queryKey[0] === "users" });
   const patch = useMutation({
     mutationFn: (body: Record<string, unknown>) => api(`/users/${id}`, { method: "PATCH", body }),
     onSuccess: (_, b) => { refresh(); toast(b.resetDevice ? "Perangkat direset. Scan berikutnya mengikat perangkat baru." : "Status anggota diperbarui"); },
     onError: (e) => toast(e.message, { error: true }),
+  });
+  const password = useMutation({
+    mutationFn: (pw: string) => api(`/users/${id}`, { method: "PATCH", body: { password: pw } }),
+    onSuccess: () => { setResetPw(false); toast("Password diganti. Anggota otomatis keluar dari semua perangkat."); },
   });
 
   if (q.isLoading) return <div className="space-y-4"><Skeleton className="h-20" /><Skeleton className="h-28" /><Skeleton className="h-72" /></div>;
@@ -61,7 +66,7 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
             </div>
             <p className="mt-0.5 text-slate-600">{current ? `${current.position ?? current.role.name}${current.division ? ` · ${current.division.name}` : ""}` : "Tidak menjabat di periode aktif"}</p>
             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-slate-500">
-              <span className="flex items-center gap-1.5"><Mail size={14} aria-hidden /> {u.email}</span>
+              {u.email && <span className="flex items-center gap-1.5"><Mail size={14} aria-hidden /> {u.email}</span>}
               {u.phone && <span className="flex items-center gap-1.5"><Phone size={14} aria-hidden /> {u.phone}</span>}
               {(u.campus || u.nim) && <span className="flex items-center gap-1.5"><GraduationCap size={14} aria-hidden /> {[u.nim, u.campus, u.major, u.batch].filter(Boolean).join(" · ")}</span>}
             </div>
@@ -72,6 +77,7 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
               <Button variant="outline" onClick={() => setEditing(true)}><Pencil size={14} aria-hidden /> Ubah</Button>
               {u.id !== me?.id && (
                 <Menu trigger={() => <Button variant="outline" size="icon" aria-label="Aksi lain"><MoreHorizontal size={16} /></Button>}>
+                  <MenuItem icon={KeyRound} onClick={() => { password.reset(); setResetPw(true); }}>Ganti password</MenuItem>
                   <MenuItem icon={UserX} danger={u.status === "ACTIVE"} onClick={() => patch.mutate({ status: u.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" })}>
                     {u.status === "ACTIVE" ? "Nonaktifkan akun" : "Aktifkan akun"}
                   </MenuItem>
@@ -136,6 +142,25 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
           </ul>
         </Card>
       )}
+
+      <Dialog open={resetPw} onClose={() => setResetPw(false)} title="Ganti password" desc={`Password baru untuk ${u.name}. Anggota akan keluar dari semua perangkat.`}>
+        <form method="post" className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const f = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
+            if (f.newPassword !== f.confirm) return toast("Konfirmasi password tidak sama", { error: true });
+            password.mutate(f.newPassword);
+          }}
+        >
+          <Field label="Password baru" hint="Minimal 8 karakter"><Input name="newPassword" type="password" autoComplete="new-password" required minLength={8} /></Field>
+          <Field label="Ulangi password baru"><Input name="confirm" type="password" autoComplete="new-password" required minLength={8} /></Field>
+          <div className="flex items-center justify-end gap-3">
+            <ErrorText error={password.error} />
+            <Button type="button" variant="ghost" onClick={() => setResetPw(false)}>Batal</Button>
+            <Button type="submit" loading={password.isPending}>Simpan</Button>
+          </div>
+        </form>
+      </Dialog>
 
       <Dialog open={editing} onClose={() => setEditing(false)} variant="sheet" title="Ubah data anggota" desc="Perubahan role akan mengeluarkan anggota dari semua sesi login.">
         {editing && (

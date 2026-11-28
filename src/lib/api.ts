@@ -126,8 +126,9 @@ export async function download(path: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-export async function login(email: string, password: string) {
-  const data = await api<{ accessToken: string; refreshToken: string }>("/auth/login", { method: "POST", body: { email, password, device: "web" } });
+// `id` = NIM atau email.
+export async function login(id: string, password: string) {
+  const data = await api<{ accessToken: string; refreshToken: string }>("/auth/login", { method: "POST", body: { login: id.trim(), password, device: "web" } });
   store.set(data.accessToken, data.refreshToken);
 }
 

@@ -43,7 +43,7 @@ export default function ProfilePage() {
             <div className="flex flex-wrap items-center justify-between gap-4 p-5">
               <AvatarEditor name={me.name} src={me.avatarUrl}>
                 <p className="text-lg font-semibold">{me.name}</p>
-                <p className="truncate text-[13px] text-slate-500">{me.email}{me.nim ? ` · NIM ${me.nim}` : ""}</p>
+                <p className="truncate text-[13px] text-slate-500">{[me.email, me.nim && `NIM ${me.nim}`].filter(Boolean).join(" · ")}</p>
                 <p className="mt-0.5 text-[13px] text-slate-600">{me.position ?? me.roleName}{me.division ? ` · ${me.division.name}` : ""}</p>
               </AvatarEditor>
               <Link href={`/dashboard/people/${me.id}`} className="text-[13px] font-medium text-primary hover:underline">Lihat profil publik</Link>

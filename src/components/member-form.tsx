@@ -16,7 +16,7 @@ export const ROLE_OPTIONS: [string, string][] = [
 ];
 
 export type MemberInput = {
-  id?: string; name?: string; email?: string; nim?: string | null; phone?: string | null; campus?: string | null; major?: string | null; batch?: string | null;
+  id?: string; name?: string; email?: string | null; nim?: string | null; phone?: string | null; campus?: string | null; major?: string | null; batch?: string | null;
   role?: string; position?: string | null; division?: { id: string } | null;
 };
 
@@ -38,10 +38,10 @@ export function MemberForm({ member, isAdmin, onDone, onCancel }: { member?: Mem
         ev.preventDefault();
         const f = Object.fromEntries(new FormData(ev.currentTarget)) as Record<string, string>;
         save.mutate({
-          name: f.name, email: f.email, divisionId: f.divisionId || null,
+          name: f.name, email: f.email.trim() || null, nim: f.nim.trim(), divisionId: f.divisionId || null,
           // Kirim role hanya kalau berubah: ganti role mencabut semua sesi anggota.
           roleKey: editing && f.roleKey === member?.role ? undefined : f.roleKey,
-          nim: opt(f.nim), phone: opt(f.phone), campus: opt(f.campus), major: opt(f.major), batch: opt(f.batch), position: f.position || undefined,
+          phone: opt(f.phone), campus: opt(f.campus), major: opt(f.major), batch: opt(f.batch), position: f.position || undefined,
           ...(editing ? {} : { password: f.password }),
         });
       }}
@@ -49,7 +49,10 @@ export function MemberForm({ member, isAdmin, onDone, onCancel }: { member?: Mem
       <section className="grid gap-4">
         <p className="text-[13px] font-semibold">Akun</p>
         <Field label="Nama lengkap"><Input name="name" required minLength={2} defaultValue={member?.name} autoFocus /></Field>
-        <Field label="Email"><Input name="email" type="email" required defaultValue={member?.email} /></Field>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="NIM" hint="Dipakai untuk login"><Input name="nim" required defaultValue={member?.nim ?? ""} /></Field>
+          <Field label="Email" hint="Opsional, bisa juga untuk login"><Input name="email" type="email" defaultValue={member?.email ?? ""} /></Field>
+        </div>
         {!editing && <Field label="Password awal" hint="Minimal 8 karakter. Minta anggota menggantinya di halaman Profil."><Input name="password" required minLength={8} /></Field>}
       </section>
       <section className="grid gap-4 border-t border-slate-100 pt-6">
@@ -72,7 +75,6 @@ export function MemberForm({ member, isAdmin, onDone, onCancel }: { member?: Mem
       <section className="grid gap-4 border-t border-slate-100 pt-6">
         <p className="text-[13px] font-semibold">Data diri</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="NIM"><Input name="nim" defaultValue={member?.nim ?? ""} /></Field>
           <Field label="No. HP"><Input name="phone" type="tel" defaultValue={member?.phone ?? ""} /></Field>
           <Field label="Kampus"><Input name="campus" defaultValue={member?.campus ?? ""} /></Field>
           <Field label="Jurusan"><Input name="major" defaultValue={member?.major ?? ""} /></Field>

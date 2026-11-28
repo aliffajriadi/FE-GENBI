@@ -7,7 +7,7 @@ import { useToast } from "@/components/toast";
 import { Badge, Button, cx, ErrorText } from "@/components/ui";
 import { apiForm, download } from "@/lib/api";
 
-type Row = { row: number; name: string; email: string; role: string; division: string | null; status: "ok" | "error" | "created"; message?: string; password?: string };
+type Row = { row: number; name: string; nim: string; email: string | null; role: string; division: string | null; status: "ok" | "error" | "created"; message?: string; password?: string };
 type Result = { summary: { total: number; valid: number; invalid: number; created: number }; rows: Row[] };
 
 // Tambah akun massal: 1) unduh template, 2) unggah → pratinjau & cek error, 3) buat akun, lalu bagikan password.
@@ -31,10 +31,10 @@ export function MemberImport({ open, onClose, onDone }: { open: boolean; onClose
   });
 
   const generated = done?.rows.filter((r) => r.status === "created" && r.password) ?? [];
-  // CSV sederhana untuk dibagikan ke anggota (nama, email, password).
+  // CSV sederhana untuk dibagikan ke anggota (nama, NIM, password).
   const csv = () => {
     const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
-    const body = ["Nama,Email,Password", ...generated.map((r) => [r.name, r.email, r.password!].map(esc).join(","))].join("\n");
+    const body = ["Nama,NIM,Password", ...generated.map((r) => [r.name, r.nim, r.password!].map(esc).join(","))].join("\n");
     const url = URL.createObjectURL(new Blob(["﻿" + body], { type: "text/csv;charset=utf-8" }));
     Object.assign(document.createElement("a"), { href: url, download: "akun-baru.csv" }).click();
     URL.revokeObjectURL(url);
@@ -72,7 +72,7 @@ export function MemberImport({ open, onClose, onDone }: { open: boolean; onClose
               <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-white">1</span>
               <div className="min-w-0 flex-1">
                 <p className="text-[14px] font-medium">Unduh template</p>
-                <p className="mt-0.5 text-[13px] text-slate-500">Isi di sheet <b>Anggota</b>. Wajib: Nama & Email. Role & Divisi pilih dari dropdown; Password boleh kosong (dibuat otomatis).</p>
+                <p className="mt-0.5 text-[13px] text-slate-500">Isi di sheet <b>Anggota</b>. Wajib: Nama & NIM (Email opsional). Role & Divisi pilih dari dropdown; Password boleh kosong (dibuat otomatis).</p>
               </div>
               <Button variant="outline" size="sm" onClick={() => download("/users/import/template", "template-import-anggota.xlsx").catch((e) => toast(e.message, { error: true }))}>
                 <Download size={14} aria-hidden /> Template
@@ -91,7 +91,7 @@ export function MemberImport({ open, onClose, onDone }: { open: boolean; onClose
               </div>
             </li>
           </ol>
-          <p className="text-xs text-slate-500">Data dicek dulu sebelum dibuat: email ganda, email yang sudah terdaftar, role/divisi yang tidak dikenal akan ditandai.</p>
+          <p className="text-xs text-slate-500">Data dicek dulu sebelum dibuat: NIM/email ganda, NIM/email yang sudah terdaftar, role/divisi yang tidak dikenal akan ditandai.</p>
           <ErrorText error={check.error} />
         </div>
       )}
@@ -124,7 +124,7 @@ export function MemberImport({ open, onClose, onDone }: { open: boolean; onClose
                 <li key={r.row} className={cx("flex items-start gap-3 px-3 py-2.5", r.status === "error" && "bg-red-50/40")}>
                   {r.status === "error" ? <AlertCircle size={16} className="mt-0.5 shrink-0 text-red-600" aria-label="Bermasalah" /> : <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-green-600" aria-label="OK" />}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-medium">{r.name || "(tanpa nama)"} <span className="font-normal text-slate-500">· {r.email || "(tanpa email)"}</span></p>
+                    <p className="truncate text-[13px] font-medium">{r.name || "(tanpa nama)"} <span className="font-normal text-slate-500">· {r.nim || "(tanpa NIM)"}</span></p>
                     <p className={cx("text-xs", r.status === "error" ? "text-red-700" : "text-slate-500")}>
                       Baris {r.row} · {r.status === "error" ? r.message : `${r.role}${r.division ? ` · ${r.division}` : ""}`}
                     </p>

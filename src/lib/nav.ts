@@ -1,4 +1,5 @@
 import {
+  Activity,
   Bell,
   CalendarCheck,
   FolderOpen,
@@ -67,6 +68,7 @@ export const NAV: { section: string; items: NavItem[] }[] = [
       { href: "/dashboard/division", label: "Kelola divisi", icon: UserCog, show: (m) => (m.role === "KADIV" && !!m.division) || has(m, "user.manage") },
       { href: "/dashboard/settings", label: "Pengaturan", icon: Settings, show: (m) => has(m, "division.manage", "role.manage", "article.publish") },
       { href: "/dashboard/audit", label: "Audit log", icon: History, show: (m) => has(m, "audit.read") },
+      { href: "/dashboard/monitor", label: "Monitoring server", icon: Activity, show: (m) => has(m, "settings.manage") },
     ],
   },
   {
